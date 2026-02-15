@@ -1,0 +1,121 @@
+Wajbat - Codebase Documentation (lib/)
+
+# Project Overview
+Wajbat is a Flutter-based mobile application designed to facilitate food donations and reduce waste. It connects donors (individuals or organizations) with recipients (individuals or charities), allowing for the posting, claiming, and tracking of food items. The app utilizes Supabase for backend services (authentication, database, storage) and integrates Google Gemini AI for ingredient detection.
+
+# Architecture & State Management
+- **Architecture**: The project follows a standard layered architecture with clear separation of concerns:
+  - **Screens (UI)**: Presentation layer.
+  - **Providers**: State management layer (using the `provider` package).
+  - **Services**: Data access and external integration layer.
+  - **Models**: Data definitions and serialization.
+  - **Core**: Shared utilities, constants, and widgets.
+- **State Management**: `MultiProvider` is configured in `main.dart` to provide global access to `AuthProvider`, `UserProvider`, `FoodPostProvider`, `RequestProvider`, `MessageProvider`, and `LanguageProvider`.
+
+---
+
+# properties (Root)
+- **main.dart**: The entry point of the application. It initializes Supabase, sets up the `MultiProvider`, defines the app theme, and handles routing (including `AppRoutes`). It checks for a session and routes to `SplashScreen`.
+
+---
+
+# 1. Core (`lib/core/`)
+Contains shared resources used throughout the application.
+
+## Config
+- **supabase_config.dart**: Initializes the Supabase client using environment variables (`SUPABASE_URL`, `SUPABASE_ANON_KEY`) loaded from `.env`.
+
+## Constants
+- **app_colors.dart**: Defines the application's color palette (Primary: Green, Secondary: Orange) and other UI colors.
+- **app_routes.dart**: Static string constants for definitions of named routes (e.g., `/login`, `/home`, `/create-post`).
+- **app_strings.dart**: Contains localized strings for English and Arabic to support internationalization.
+
+## Utils
+- **validators.dart**: Static methods for form validation (Email, Password, Name, Phone).
+- **snackbar_helper.dart**: Helper methods (`showSuccess`, `showError`, `showInfo`) for displaying consistent SnackBars.
+- **date_formatter.dart**: Utilities for date handling (assumed, file exists).
+
+## Widgets
+- **custom_button.dart**: A reusable button widget with loading state support and customizable styling.
+- **custom_text_field.dart**: A reusable text field widget with support for suffixes, prefixes, and validation.
+- **loading_indicator.dart**: A standardized circular progress indicator for loading states.
+
+---
+
+# 2. Models (`lib/models/`)
+Data classes with `fromJson` and `toJson` methods for API interaction.
+
+- **user_model.dart**: Represents a user. Key fields: `id`, `email`, `name`, `roles` (donor/recipient), `active_role`, `donationPoints`, `organizationName`.
+- **food_post_model.dart**: Represents a food item. Key fields: `postId`, `donorId`, `itemName`, `quantity`, `expirationDate`, `imageUrl`, `location`, `postStatus` (available/reserved/completed).
+- **request_model.dart**: Represents a request for food. Key fields: `requestId`, `postId`, `donorId`, `recipientId`, `status` (pending/accepted/completed/rejected).
+- **message_model.dart**: Represents a chat message. Key fields: `id`, `senderId`, `receiverId`, `content`, `timestamp`.
+- **reward_model.dart**: Represents user rewards/badges based on donation points.
+
+---
+
+# 3. Services (`lib/services/`)
+Handles direct interaction with external APIs.
+
+- **auth_service.dart**: Manages Supabase Auth (Sign Up, Sign In, Sign Out, Password Reset). Handles user role switching and profile data fetching.
+- **database_service.dart**: Handles CRUD operations for Supabase database tables (`users`, `food_posts`, `requests`, `messages`).
+- **storage_service.dart**: Manages file uploads (profile images, food images) to Supabase Storage buckets.
+- **ai_service.dart**: Integrates with Google Generative AI (Gemini) to analyze images and detect food ingredients.
+
+---
+
+# 4. Providers (`lib/providers/`)
+Manages application state and business logic.
+
+- **auth_provider.dart**: Wraps `AuthService`. Manages the current user's session, authentication state, and active role.
+- **user_provider.dart**: Manages user profile data, including fetching public profiles and updating current user details.
+- **food_post_provider.dart**: Manages the list of food posts. Handles fetching (all or by user), creating, updating, deleting, and filtering posts.
+- **request_provider.dart**: Manages donation requests. Handles sending requests, accepting/rejecting, and completing request cycles (updating both request and post status).
+- **message_provider.dart**: Manages chat functionality (fetching messages, sending messages).
+- **language_provider.dart**: Manages the application's locale settings (EN/AR).
+
+---
+
+# 5. Screens (`lib/screens/`)
+UI implementation organized by feature.
+
+## Splash
+- **splash_screen.dart**: Displays an animated logo while checking authentication state. Routes to Login or Home based on session.
+
+## Auth (`lib/screens/auth/`)
+- **login_screen.dart**: Allows users to sign in. Supports role selection upon login if the user has multiple roles.
+- **register_screen.dart**: User registration form. Captures name, email, password, roles (donor/recipient), and specific fields like Organization Name or Recipient Type.
+- **forgot_password_screen.dart**: Sends a password reset email via Supabase.
+
+## Home (`lib/screens/home/`)
+- **home_screen.dart**: The main shell with a `BottomNavigationBar`. It switches between views based on the user's role.
+- **donor_home_screen.dart**: Dashboard for donors. Shows stats (Impact Points, Active Posts), recent posts, and pending requests.
+- **recipient_home_screen.dart**: Dashboard for recipients. Features a search bar, category filters, and a grid of available food posts.
+
+## Food (`lib/screens/food/`)
+- **create_post_screen.dart**: Form to add a new donation. Features image picking (Camera/Gallery), image cropping, AI ingredient analysis, and location detection.
+- **edit_post_screen.dart**: Allows editing an existing post. Similar functionalities to Create Post.
+- **food_detail_screen.dart**: Displays full details of a food item.
+  - **For Recipients**: Shows "Request Food" button.
+  - **For Donors**: Shows "Edit" and "Delete" options.
+- **food_list_screen.dart**: A reusable list view for food posts with tabs (All, Available, Expired, Completed). Used for "My Donations" or browsing.
+
+## Requests (`lib/screens/requests/`)
+- **incoming_requests_screen.dart**: (For Donors) Lists requests received for their posts. Allows accepting, rejecting, or marking requests as completed.
+- **my_requests_screen.dart**: (For Recipients) Lists requests they have made. Shows status and allows cancellation.
+
+## Profile (`lib/screens/profile/`)
+- **profile_screen.dart**: Displays user info, stats, and settings. Options for Language, Notifications, Support, Logout, and Delete Account. Includes a Role Switcher.
+- **edit_profile_screen.dart**: Form to update name, phone, generic profile details, and profile image.
+
+## Rewards (`lib/screens/rewards/`)
+- **leaderboard_screen.dart**: (Empty/Placeholder) Intended for displaying user rankings.
+
+## Excluded/Placeholder
+- **Chat**: `screens/chat/` (Excluded from report as per instructions, though placeholders exist in navigation).
+- **Support**: `screens/support/` (Excluded from report).
+
+---
+
+# Key Workflows
+1.  **Donation Flow**: Donor creates a post -> Post appears in Recipient Home -> Recipient requests food -> Donor accepts -> Food is "Reserved" -> Pickup occurs -> Donor marks "Completed" -> Food status "Completed".
+2.  **Role Switching**: Users can hold both 'donor' and 'recipient' roles and switch between them in the Profile screen or upon Login.

@@ -1,0 +1,66 @@
+name: wajbat
+description: A food donation app connecting donors and recipients
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  
+  # State Management
+  provider: ^6.1.1
+  
+  # Supabase
+  supabase_flutter: ^2.3.4
+  
+  # UI & Design
+  google_fonts: ^6.1.0
+  flutter_svg: ^2.0.9
+  cached_network_image: ^3.3.0
+  shimmer: ^3.0.0
+  
+  # Localization
+  easy_localization: ^3.0.3
+  intl: any
+  
+  # Image & Camera
+  image_picker: ^1.0.5
+  image_cropper: ^8.0.2
+  flutter_image_compress: ^2.1.0
+  
+  # AI/ML
+  google_generative_ai: ^0.4.7
+  
+  # Maps & Location
+  geolocator: ^10.1.0
+  geocoding: ^2.1.1
+  google_maps_flutter: ^2.5.0
+  
+  # Utilities
+  url_launcher: ^6.2.2
+  share_plus: ^7.2.1
+  path_provider: ^2.1.1
+  shared_preferences: ^2.2.2
+  uuid: ^4.2.2
+  flutter_dotenv: ^5.1.0
+  
+  # Date & Time
+  flutter_datetime_picker_plus: ^2.1.0
+  timeago: ^3.6.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - .env
+    - assets/images/
+    - assets/translations/
