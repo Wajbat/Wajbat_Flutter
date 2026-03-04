@@ -25,6 +25,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _orgNameController = TextEditingController();
+  final _allergyController = TextEditingController();
 
   // State
   bool _isPasswordVisible = false;
@@ -35,6 +36,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _isDonor = false;
   bool _isRecipient = false;
   String? _recipientType = 'individual'; // "individual" or "charity"
+  final List<String> _allergies = [];
 
   @override
   void dispose() {
@@ -44,6 +46,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _orgNameController.dispose();
+    _allergyController.dispose();
     super.dispose();
   }
 
@@ -85,6 +88,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
       ],
     );
+
+  }
+
+  void _addAllergy() {
+    final text = _allergyController.text.trim().toLowerCase();
+    if (text.isEmpty) return;
+
+    if (_allergies.contains(text)) {
+      SnackbarHelper.showError(context, 'Allergy already added');
+      return;
+    }
+
+    setState(() {
+      _allergies.add(text);
+      _allergyController.clear();
+    });
+    SnackbarHelper.showSuccess(context, 'Allergy added');
+  }
+
+  void _removeAllergy(String allergy) {
+    setState(() {
+      _allergies.remove(allergy);
+    });
   }
 
   Future<void> _handleRegister() async {
@@ -117,6 +143,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         phoneNumber: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
         organizationName: _isDonor ? _orgNameController.text.trim() : null,
         recipientType: _isRecipient ? _recipientType : null,
+        allergies: _isRecipient ? _allergies : null,
       );
 
       if (success && mounted) {
@@ -295,7 +322,98 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ],
                     ),
                   ),
-                ],
+                  ],
+
+                  // Allergies Section (Conditional)
+                  if (_isRecipient) ...[
+                    const SizedBox(height: 16),
+                    const Divider(),
+                    const SizedBox(height: 8),
+                    
+                    // Header
+                    Row(
+                      children: [
+                        const Icon(Icons.warning_amber_rounded, color: Colors.red),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Food Allergies (Optional)',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red[800],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Do you have any food allergies? We\'ll warn you about posts containing these ingredients.',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Chips
+                    if (_allergies.isNotEmpty)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.red[50],
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.red[100]!),
+                        ),
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: _allergies.map((allergy) {
+                            return Chip(
+                              label: Text(allergy),
+                              labelStyle: TextStyle(color: Colors.red[900]),
+                              backgroundColor: Colors.white,
+                              deleteIcon: const Icon(Icons.close, size: 18, color: Colors.red),
+                              onDeleted: () => _removeAllergy(allergy),
+                              side: BorderSide(color: Colors.red[200]!),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    
+                    if (_allergies.isNotEmpty) const SizedBox(height: 12),
+
+                    // Input Row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: CustomTextField(
+                            controller: _allergyController,
+                            label: 'Add allergy',
+                            hint: 'e.g., peanuts, dairy',
+                            prefixIcon: Icons.add_alert_outlined,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        InkWell(
+                          onTap: _addAllergy,
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: theme.primaryColor,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.add, color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    const Padding(
+                      padding: EdgeInsets.only(left: 4.0),
+                      child: Text(
+                        'Add each ingredient separately. Tap + after typing each one.',
+                        style: TextStyle(fontSize: 11, color: Colors.grey),
+                      ),
+                    ),
+                  ],
 
                 const SizedBox(height: 16),
                 

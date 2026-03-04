@@ -16,6 +16,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/food_post_provider.dart';
 import '../../providers/request_provider.dart';
 import '../../providers/user_provider.dart';
+import '../../models/request_model.dart';
 
 class FoodDetailScreen extends StatefulWidget {
   const FoodDetailScreen({super.key});
@@ -32,6 +33,10 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
     final requestProvider = Provider.of<RequestProvider>(context, listen: false);
 
     if (authProvider.currentUser == null) return;
+
+    // Check for allergies
+    final proceed = await _checkAllergiesBeforeRequest(post);
+    if (!proceed) return;
 
     final message = await _showRequestDialog();
     if (message == null) return;
@@ -89,10 +94,16 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
     // Defer the provider access to next frame or use listen: false if immediate
     WidgetsBinding.instance.addPostFrameCallback((_) {
        final post = ModalRoute.of(context)!.settings.arguments as FoodPostModel;
+       final authProvider = Provider.of<AuthProvider>(context, listen: false);
        if (mounted) {
          setState(() {
             _donorFuture = Provider.of<UserProvider>(context, listen: false).fetchUserById(post.donorId);
          });
+         
+         // Also fetch my requests to check if we already requested this
+         if (authProvider.currentUser != null) {
+           Provider.of<RequestProvider>(context, listen: false).fetchMyRequests(authProvider.currentUser!.id);
+         }
        }
     }); 
   }
@@ -204,18 +215,100 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                   ),
 
                   const SizedBox(height: 24),
+
+                  // Allergy Warning Banner
+                  if (authProvider.currentUser?.isRecipient == true && 
+                      authProvider.currentUser!.getAllergenIngredients(post.ingredients).isNotEmpty) ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red[50],
+                        border: Border.all(color: Colors.red, width: 2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.warning_amber_rounded, color: Colors.red),
+                              const SizedBox(width: 8),
+                              const Text(
+                                'Allergy Warning',
+                                style: TextStyle(
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Contains: ${authProvider.currentUser!.getAllergenIngredients(post.ingredients).join(", ")}',
+                            style: TextStyle(
+                              color: Colors.red[900],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
                   
                   // Ingredients
-                  const Text('Ingredients', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Row(
+                    children: [
+                     const Icon(Icons.restaurant_menu, size: 20, color: Colors.grey),
+                     const SizedBox(width: 8),
+                     const Text('Ingredients', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
                   const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: post.ingredients.map((ing) => Chip(
-                      label: Text(ing),
-                      backgroundColor: AppColors.secondary.withOpacity(0.1),
-                    )).toList(),
+                    children: post.ingredients.map((ing) {
+                      final isAllergen = authProvider.currentUser != null && 
+                                       authProvider.currentUser!.isRecipient &&
+                                       authProvider.currentUser!.hasAllergy(ing);
+                                       
+                      return Chip(
+                        avatar: isAllergen ? const Icon(Icons.warning, size: 16, color: Colors.red) : null,
+                        label: Text(
+                          ing,
+                          style: TextStyle(
+                            color: isAllergen ? Colors.red[900] : Colors.green[900],
+                            fontWeight: isAllergen ? FontWeight.bold : FontWeight.normal,
+                          ),
+                        ),
+                        backgroundColor: isAllergen ? Colors.red[50] : Colors.green[50],
+                        side: BorderSide(
+                          color: isAllergen ? Colors.red : Colors.green[200]!,
+                          width: isAllergen ? 2 : 1,
+                        ),
+                      );
+                    }).toList(),
                   ),
+                  
+                  // Legend
+                  if (authProvider.currentUser?.isRecipient == true && 
+                      authProvider.currentUser!.getAllergenIngredients(post.ingredients).isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle)),
+                        const SizedBox(width: 4),
+                        Text('Contains Allergen', style: TextStyle(fontSize: 10, color: Colors.grey[600])),
+                        const SizedBox(width: 12),
+                        Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle)),
+                        const SizedBox(width: 4),
+                        Text('Safe Ingredient', style: TextStyle(fontSize: 10, color: Colors.grey[600])),
+                      ],
+                    ),
+                  ],
 
                   const SizedBox(height: 24),
                   
@@ -307,6 +400,10 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                         : CustomButton(
                             text: 'Request This Food',
                             onPressed: isExpired ? null : () => _handleRequest(post),
+                            color: (authProvider.currentUser?.isRecipient == true && 
+                                            authProvider.currentUser!.getAllergenIngredients(post.ingredients).isNotEmpty)
+                                            ? Colors.red 
+                                            : AppColors.primary,
                           ),
                   ),
                   const SizedBox(width: 12),
@@ -318,7 +415,33 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                     child: IconButton(
                       icon: const Icon(Icons.chat_bubble_outline, color: AppColors.secondary),
                       onPressed: () {
-                        // Navigate to Chat
+                        // Find if there is an existing request for this post
+                        final requestProvider = Provider.of<RequestProvider>(context, listen: false);
+                        final existingRequest = requestProvider.myRequests.cast<RequestModel?>().firstWhere(
+                              (r) => r?.postId == post.postId,
+                              orElse: () => null,
+                            );
+
+                        if (existingRequest != null && userProvider.targetUser != null) {
+                          Navigator.pushNamed(
+                            context,
+                            AppRoutes.chat,
+                            arguments: {
+                              'request': existingRequest,
+                              'otherUser': userProvider.targetUser!,
+                            },
+                          );
+                        } else {
+                          if (existingRequest == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Please request the food first to start a chat/negotiation.')),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Donor details not loaded yet.')),
+                            );
+                          }
+                        }
                       },
                     ),
                   ),
@@ -326,6 +449,56 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
               ),
       ),
     );
+  }
+
+  Future<bool> _checkAllergiesBeforeRequest(FoodPostModel post) async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (authProvider.currentUser == null || !authProvider.currentUser!.isRecipient) return true;
+
+    final allergens = authProvider.currentUser!.getAllergenIngredients(post.ingredients);
+    if (allergens.isEmpty) return true;
+
+    // Show warning dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.warning, color: Colors.red),
+            const SizedBox(width: 8),
+            const Text('Allergy Warning', style: TextStyle(color: Colors.red)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('This food contains ingredients you are allergic to:'),
+            const SizedBox(height: 8),
+            Text(
+              allergens.join(", "),
+              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+            ),
+            const SizedBox(height: 16),
+            const Text('Are you sure you want to proceed nicely? consuming this could be dangerous.'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Request Anyway (I understand the risk)', style: TextStyle(color: Colors.white, fontSize: 12)),
+          ),
+        ],
+      ),
+    );
+
+    return confirmed ?? false;
   }
 
   Widget _buildDetailItem(IconData icon, String label, String value, {Color color = Colors.black}) {
@@ -338,12 +511,14 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
             child: Icon(icon, color: AppColors.primary, size: 20),
           ),
           const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: const TextStyle(fontSize: 12, color: Colors.black54)),
-              Text(value, style: TextStyle(fontWeight: FontWeight.bold, color: color)),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: const TextStyle(fontSize: 12, color: Colors.black54), overflow: TextOverflow.ellipsis),
+                Text(value, style: TextStyle(fontWeight: FontWeight.bold, color: color), overflow: TextOverflow.ellipsis),
+              ],
+            ),
           ),
         ],
       ),

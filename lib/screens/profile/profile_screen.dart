@@ -8,6 +8,7 @@ import '../../providers/user_provider.dart';
 import '../../providers/language_provider.dart';
 import '../../providers/food_post_provider.dart';
 import '../../core/utils/snackbar_helper.dart';
+import '../../core/localization/app_localizations.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -18,6 +19,23 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   
+  Future<void> _handleRefresh() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final user = authProvider.currentUser;
+    
+    // Refresh user's posts if donor
+    if (user != null && user.isDonor) {
+      await Provider.of<FoodPostProvider>(context, listen: false).fetchMyPosts(user.id);
+    }
+    
+    // Refresh user profile data from Supabase/Auth
+    await authProvider.refreshUser();
+    
+    if (mounted) {
+      SnackbarHelper.showSuccess(context, 'Profile refreshed');
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -40,13 +58,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Header Section
-            Container(
-              width: double.infinity, // Extend width to full screen
-              padding: const EdgeInsets.fromLTRB(20, 100, 20, 40), // Increased top padding
+      appBar: AppBar(
+        title: const Text('My Profile'),
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _handleRefresh,
+            tooltip: 'Refresh Profile',
+          ),
+        ],
+      ),
+      body: RefreshIndicator(
+        onRefresh: _handleRefresh,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            children: [
+              // Header Section
+              Container(
+                width: double.infinity, // Extend width to full screen
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 40), // Reduced top padding for AppBar
               decoration: BoxDecoration(
                 color: AppColors.primary,
                 borderRadius: const BorderRadius.only(
@@ -162,7 +196,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 final newRole = value ? 'donor' : 'recipient';
                                 final success = await authProvider.switchRole(newRole);
                                 if (success && context.mounted) {
-                                  SnackbarHelper.showSuccess(context, 'Switched to ${newRole.toUpperCase()} mode');
+                                  SnackbarHelper.showSuccess(context, '${AppLocalizations.of(context)!.translate('switch_role')} ${newRole.toUpperCase()}');
                                   Navigator.pushReplacementNamed(
                                     context,
                                     newRole == 'donor' ? AppRoutes.donorHome : AppRoutes.recipientHome,
@@ -174,6 +208,53 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                     ),
+                  
+                  // Allergies Section (For Recipients)
+                  if (user.isRecipient && user.allergies.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.red[50], // Red-tinted background
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.red[100]!),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.warning_amber_rounded, color: Colors.red),
+                              const SizedBox(width: 8),
+                              const SizedBox(width: 8),
+                              Text(
+                                AppLocalizations.of(context)!.translate('my_allergies'),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.red[900],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: user.allergies.map((allergy) => Chip(
+                              label: Text(allergy),
+                              labelStyle: TextStyle(color: Colors.red[900], fontSize: 12),
+                              backgroundColor: Colors.white,
+                              side: BorderSide(color: Colors.red[200]!),
+                              visualDensity: VisualDensity.compact,
+                              padding: EdgeInsets.zero,
+                            )).toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
 
                   const SizedBox(height: 20),
 
@@ -184,15 +265,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         final activePosts = foodProvider.myPosts
                             .where((p) => p.postStatus == 'available')
                             .length;
-                        // For stats, we can just use the length of filtered lists
                         
                         return Row(
                           children: [
-                            _buildStatCard('Total\nDonations', '${user.donationPoints}', Icons.volunteer_activism), 
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () => Navigator.pushNamed(context, AppRoutes.leaderboard),
+                                child: _buildStatCard(AppLocalizations.of(context)!.translate('total_donations'), '${user.donationPoints}', Icons.volunteer_activism), 
+                              ),
+                            ),
                             const SizedBox(width: 12),
-                            _buildStatCard('Active\nPosts', '$activePosts', Icons.inventory_2),
+                            Expanded(child: _buildStatCard(AppLocalizations.of(context)!.translate('active_posts'), '$activePosts', Icons.inventory_2)),
                             const SizedBox(width: 12),
-                            _buildStatCard('Impact\nScore', 'High', Icons.favorite), // You can calculate this too if needed
+                            Expanded(child: _buildStatCard(AppLocalizations.of(context)!.translate('impact_score'), 'High', Icons.favorite)),
                           ],
                         );
                       },
@@ -203,56 +288,56 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   // Settings List
                   _buildSettingsTile(
                     icon: Icons.person_outline,
-                    title: 'Edit Profile',
+                    title: AppLocalizations.of(context)!.translate('edit_profile'),
                     onTap: () => Navigator.pushNamed(context, AppRoutes.editProfile),
                   ),
                   _buildSettingsTile(
                     icon: Icons.language,
-                    title: 'Language',
-                    trailing: const Text('English', style: TextStyle(color: Colors.grey)), // Dynamic later
+                    title: AppLocalizations.of(context)!.translate('language'),
+                    trailing: Text(Provider.of<LanguageProvider>(context).currentLanguage == 'en' ? 'English' : 'العربية', style: TextStyle(color: Colors.grey)), 
                     onTap: () => _showLanguageDialog(context),
                   ),
                   _buildSettingsTile(
                     icon: Icons.notifications_outlined,
-                    title: 'Notifications',
+                    title: AppLocalizations.of(context)!.translate('notifications'),
                     trailing: Switch(
-                      value: true, // TODO: Implement provider
+                      value: true, 
                       onChanged: (val) {},
                       activeColor: AppColors.primary,
                     ),
                   ),
                   const Divider(),
                   _buildSettingsTile(
-                    icon: Icons.info_outline,
-                    title: 'About Us',
-                    onTap: () {},
+                    icon: Icons.help_outline,
+                    title: AppLocalizations.of(context)!.translate('help_center'),
+                    onTap: () => Navigator.pushNamed(context, AppRoutes.chatbot),
                   ),
                    _buildSettingsTile(
                     icon: Icons.policy_outlined,
-                    title: 'Privacy Policy',
+                    title: AppLocalizations.of(context)!.translate('privacy_policy'),
                     onTap: () {},
                   ),
                    _buildSettingsTile(
                     icon: Icons.description_outlined,
-                    title: 'Terms & Conditions',
+                    title: AppLocalizations.of(context)!.translate('terms_conditions'),
                     onTap: () {},
                   ),
                   _buildSettingsTile(
                     icon: Icons.headset_mic_outlined,
-                    title: 'Contact Support',
+                    title: AppLocalizations.of(context)!.translate('contact_support'),
                     onTap: () => Navigator.pushNamed(context, AppRoutes.supportTicket),
                   ),
                   const Divider(),
                   _buildSettingsTile(
                     icon: Icons.logout,
-                    title: 'Logout',
+                    title: AppLocalizations.of(context)!.translate('logout'),
                     textColor: Colors.red,
                     iconColor: Colors.red,
                     onTap: () => _showLogoutDialog(context, authProvider),
                   ),
                   _buildSettingsTile(
                     icon: Icons.delete_forever,
-                    title: 'Delete Account',
+                    title: AppLocalizations.of(context)!.translate('delete_account'),
                     textColor: Colors.red,
                     iconColor: Colors.red,
                     onTap: () => _showDeleteAccountDialog(context, authProvider, user.id),
@@ -263,12 +348,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildStatCard(String title, String value, IconData icon) {
-    return Expanded(
-      child: Container(
+    return Container(
+        width: 100, // Fixed width or flexible
+        // Actually, better to keep it flexible but let parent handle Expanded
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -297,8 +384,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildSettingsTile({
@@ -334,7 +420,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Select Language'),
+        title: Text(AppLocalizations.of(context)!.translate('select_language')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -362,12 +448,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
+        title: Text(AppLocalizations.of(context)!.translate('logout')),
+        content: Text(AppLocalizations.of(context)!.translate('logout') + '?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.translate('cancel')),
           ),
           TextButton(
             onPressed: () async {
@@ -378,7 +464,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
               }
             },
-            child: const Text('Logout', style: TextStyle(color: Colors.red)),
+            child: Text(AppLocalizations.of(context)!.translate('logout'), style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -391,7 +477,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete Account', style: TextStyle(color: Colors.red)),
+        title: Text(AppLocalizations.of(context)!.translate('delete_account'), style: TextStyle(color: Colors.red)),
+
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -408,8 +495,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
              TextField(
               controller: passwordController,
               obscureText: true,
-              decoration: const InputDecoration(
-                hintText: 'Password',
+              decoration: InputDecoration(
+                hintText: AppLocalizations.of(context)!.translate('password'),
                 border: OutlineInputBorder(),
                 isDense: true,
               ),
@@ -419,7 +506,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.translate('cancel')),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'core/localization/app_localizations.dart';
 import 'core/config/supabase_config.dart';
 import 'core/constants/app_colors.dart';
 import 'core/constants/app_routes.dart';
@@ -24,6 +25,9 @@ import 'screens/requests/incoming_requests_screen.dart';
 import 'screens/profile/profile_screen.dart';
 import 'screens/profile/edit_profile_screen.dart';
 import 'screens/support/support_ticket_screen.dart';
+import 'screens/support/chatbot_screen.dart';
+import 'screens/rewards/leaderboard_screen.dart';
+import 'screens/chat/chat_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -67,6 +71,7 @@ class MyApp extends StatelessWidget {
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
+              AppLocalizations.delegate,
             ],
             // Theme
             theme: ThemeData(
@@ -98,6 +103,9 @@ class MyApp extends StatelessWidget {
               AppRoutes.profile: (context) => const ProfileScreen(),
               AppRoutes.editProfile: (context) => const EditProfileScreen(),
               AppRoutes.supportTicket: (context) => const SupportTicketScreen(),
+              AppRoutes.chat: (context) => const ChatScreen(),
+              AppRoutes.chatbot: (context) => const ChatbotScreen(),
+              AppRoutes.leaderboard: (context) => const LeaderboardScreen(),
               AppRoutes.myDonations: (context) => const FoodListScreen(isMyPosts: true),
             },
           );

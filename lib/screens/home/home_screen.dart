@@ -11,6 +11,7 @@ import '../food/food_list_screen.dart';
 import '../requests/my_requests_screen.dart';
 import '../requests/incoming_requests_screen.dart';
 import '../profile/profile_screen.dart';
+import '../chat/chat_list_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -26,7 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
     const RoleSpecificHome(),
     const BrowseOrMyPosts(),
     const RequestsScreenSwitcher(),
-    const ChatListScreenPlaceholder(), // Placeholder for now
+    const ChatListScreen(), 
     const ProfileScreen(),
   ];
 
@@ -110,8 +111,11 @@ class BrowseOrMyPosts extends StatelessWidget {
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
     return authProvider.currentUser?.isDonor ?? true
-        ? const FoodListScreen()
-        : const RecipientHomeScreen(); // For recipient, browse is home or similar
+        ? const FoodListScreen(isMyPosts: true)
+        : const RecipientHomeScreen(); // For recipient, browse is home or similar. 
+        // Technically RecipientHomeScreen is duplicate here if Home is also RecipientHomeScreen.
+        // Assuming FoodListScreen can be used for "Browse" too if configured.
+        // But for now, keeping as logic dictated.
   }
 }
 
@@ -127,17 +131,5 @@ class RequestsScreenSwitcher extends StatelessWidget {
   }
 }
 
-// Temporary Placeholders
-class RequestsScreenPlaceholder extends StatelessWidget {
-  const RequestsScreenPlaceholder({super.key});
-  @override
-  Widget build(BuildContext context) => const Scaffold(body: Center(child: Text('Requests Screen')));
-}
-
-class ChatListScreenPlaceholder extends StatelessWidget {
-  const ChatListScreenPlaceholder({super.key});
-  @override
-  Widget build(BuildContext context) => const Scaffold(body: Center(child: Text('Chat Screen')));
-}
 
 

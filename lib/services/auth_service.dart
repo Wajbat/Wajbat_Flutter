@@ -19,6 +19,7 @@ class AuthService {
     String? phoneNumber,
     String? organizationName,
     String? recipientType,
+    List<String>? allergies,
   }) async {
     debugPrint('Attempting Sign Up with email: $email');
     try {
@@ -41,7 +42,8 @@ class AuthService {
         roles, 
         phoneNumber, 
         organizationName, 
-        recipientType
+        recipientType,
+        allergies,
       );
 
     } on AuthException catch (e) {
@@ -77,6 +79,8 @@ class AuthService {
                      'roles': currentRoles.toList(),
                      'active_role': newActiveRole,
                      'updated_at': DateTime.now().toIso8601String(),
+                     // Note: We are NOT automatically adding allergies here for existing users to avoid overwriting/complexity logic without user input
+                     // If needed, we could merge allergies, but simpler to let them edit profile later.
                    }).eq('id', user.id);
 
                    // If new role includes donor, ensure rewards exist
@@ -98,7 +102,8 @@ class AuthService {
                 roles, 
                 phoneNumber, 
                 organizationName, 
-                recipientType
+                recipientType,
+                allergies,
              );
           }
         } catch (loginError) {
@@ -120,6 +125,7 @@ class AuthService {
     String? phoneNumber,
     String? organizationName,
     String? recipientType,
+    List<String>? allergies,
   ) async {
       final String currentRole = roles.first; 
 
@@ -134,6 +140,7 @@ class AuthService {
         updatedAt: DateTime.now(),
         organizationName: organizationName,
         recipientType: recipientType,
+        allergies: allergies ?? [],
       );
 
       // Insert into 'users' table

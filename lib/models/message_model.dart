@@ -31,7 +31,7 @@ class MessageModel {
   }
 
   Map<String, dynamic> toJson() {
-    return {
+    final map = {
       'message_id': messageId,
       'request_id': requestId,
       'sender_id': senderId,
@@ -40,6 +40,13 @@ class MessageModel {
       'is_read': isRead,
       'created_at': createdAt.toIso8601String(),
     };
+    
+    // Remove empty messageId to allow DB to generate it
+    if (messageId.isEmpty) {
+      map.remove('message_id');
+    }
+    
+    return map;
   }
 
   // CopyWith

@@ -68,18 +68,7 @@ class FoodPostProvider with ChangeNotifier {
       final String? imageUrl = await _storageService.uploadFoodImage(image, donorId);
 
       final newPost = FoodPostModel(
-        postId: _uuid.v4(), // We might need to let DB assign this or use UUID here. 
-                          // DatabaseService createPost returns ID, so let's check that.
-                          // Actually DatabaseService createPost takes a model. 
-                          // So we generate a temp ID or let DB handle it. 
-                          // The user's prompt says "Create FoodPostModel... Call _dbService.createFoodPost".
-                          // I'll leave ID empty or generate one if model requires it.
-                          // Model requires it. Let's use empty string and update after specific implementation if needed,
-                          // or generate a UUID if we are doing client-side ID gen.
-                          // To be safe and consistent with typical client-gen patterns I'll use UUID locally 
-                          // OR I can trust the DB service to return the real ID. 
-                          // However, the model needs an ID in constructor.
-                          // I'll generate one here.
+        postId: _uuid.v4(), 
         donorId: donorId,
         itemName: itemName,
         quantity: quantity,

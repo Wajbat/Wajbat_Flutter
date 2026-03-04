@@ -217,12 +217,16 @@ class _DonorHomeScreenState extends State<DonorHomeScreen> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: _getStatusColor(post.postStatus).withOpacity(0.1),
+                                color: (post.isExpired && post.postStatus == 'available' ? Colors.red : _getStatusColor(post.postStatus)).withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
-                                post.postStatus.toUpperCase(),
-                                style: TextStyle(fontSize: 8, color: _getStatusColor(post.postStatus), fontWeight: FontWeight.bold),
+                                (post.isExpired && post.postStatus == 'available' ? 'EXPIRED' : post.postStatus).toUpperCase(),
+                                style: TextStyle(
+                                  fontSize: 8, 
+                                  color: post.isExpired && post.postStatus == 'available' ? Colors.red : _getStatusColor(post.postStatus), 
+                                  fontWeight: FontWeight.bold
+                                ),
                               ),
                             ),
                             Text(

@@ -50,6 +50,7 @@ class AuthProvider with ChangeNotifier {
     String? phoneNumber,
     String? organizationName,
     String? recipientType,
+    List<String>? allergies,
   }) async {
     _setLoading(true);
     try {
@@ -61,6 +62,7 @@ class AuthProvider with ChangeNotifier {
         phoneNumber: phoneNumber,
         organizationName: organizationName,
         recipientType: recipientType,
+        allergies: allergies,
       );
       _currentUser = user;
       _errorMessage = null;

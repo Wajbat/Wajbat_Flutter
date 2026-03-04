@@ -51,5 +51,20 @@
 	<string>We need photo library access to select food images</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>We need your location to show nearby food donations</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>ar</string>
+	</array>
+    <key>LSApplicationQueriesSchemes</key>
+    <array>
+        <string>https</string>
+        <string>http</string>
+        <string>tel</string>
+        <string>mailto</string>
+        <string>sms</string>
+        <string>googlechromes</string>
+        <string>comgooglemaps</string>
+    </array>
 </dict>
 </plist>

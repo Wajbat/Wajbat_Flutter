@@ -46,6 +46,12 @@ class _IncomingRequestsScreenState extends State<IncomingRequestsScreen> with Si
     return Scaffold(
       appBar: AppBar(
         title: const Text('Incoming Requests'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadRequests,
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,

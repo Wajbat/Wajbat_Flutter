@@ -63,10 +63,17 @@ class RequestProvider with ChangeNotifier {
         updatedAt: DateTime.now(),
       );
 
-      await _dbService.createRequest(newRequest);
+      final newId = await _dbService.createRequest(newRequest);
       
-      // Refresh requests
-      await fetchMyRequests(recipientId);
+      // Update local request with real ID
+      final createdRequest = newRequest.copyWith(requestId: newId);
+      
+      // Refresh requests (fetch from server to be sure, but also update local optimistically/safely)
+      _myRequests.insert(0, createdRequest); // Add to top
+      notifyListeners(); // Notify immediately so UI updates
+      
+      await fetchMyRequests(recipientId); // Fetch to sync completely
+      
       _errorMessage = null;
       notifyListeners();
       return true;

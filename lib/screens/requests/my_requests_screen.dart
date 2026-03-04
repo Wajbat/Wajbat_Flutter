@@ -44,6 +44,12 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> with SingleTickerPr
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Requests'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadRequests,
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,

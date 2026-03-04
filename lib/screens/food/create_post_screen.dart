@@ -69,6 +69,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             AndroidUiSettings(
               toolbarTitle: 'Crop Image',
               toolbarColor: AppColors.primary,
+              statusBarColor: AppColors.primary,
               toolbarWidgetColor: Colors.white,
               initAspectRatio: CropAspectRatioPreset.original,
               lockAspectRatio: false,

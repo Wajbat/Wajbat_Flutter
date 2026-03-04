@@ -261,18 +261,28 @@ class _RecipientHomeScreenState extends State<RecipientHomeScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      const Icon(Icons.access_time, size: 12, color: Colors.orange),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          'Expires: ${_formatDate(post.expirationDate)}',
-                          style: const TextStyle(fontSize: 10, color: Colors.black54),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.access_time, 
+                          size: 12, 
+                          color: post.isExpired ? Colors.red : Colors.orange
                         ),
-                      ),
-                    ],
-                  ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            post.isExpired 
+                                ? 'EXPIRED: ${_formatDate(post.expirationDate)}'
+                                : 'Expires: ${_formatDate(post.expirationDate)}',
+                            style: TextStyle(
+                              fontSize: 10, 
+                              color: post.isExpired ? Colors.red : Colors.black54,
+                              fontWeight: post.isExpired ? FontWeight.bold : FontWeight.normal,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   const SizedBox(height: 8),
                   Row(
                     children: [

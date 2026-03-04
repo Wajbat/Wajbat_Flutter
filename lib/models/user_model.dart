@@ -10,6 +10,7 @@ class UserModel {
   final String? profileImageUrl;
   final String? organizationName;
   final String? recipientType; // 'individual' or 'charity'
+  final List<String> allergies; // Optional: List of allergens for recipients
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -25,6 +26,7 @@ class UserModel {
     this.profileImageUrl,
     this.organizationName,
     this.recipientType,
+    this.allergies = const [],
     required this.createdAt,
     required this.updatedAt,
   });
@@ -34,6 +36,23 @@ class UserModel {
   bool get isRecipient => active_role == 'recipient';
   bool hasRole(String role) => roles.contains(role);
   bool get canSwitchRoles => roles.length > 1;
+
+  /// Checks if the user has an allergy to a specific ingredient.
+  /// Performs a case-insensitive partial match.
+  bool hasAllergy(String ingredient) {
+    if (allergies.isEmpty) return false;
+    final lowerIngredient = ingredient.toLowerCase();
+    return allergies.any((allergy) => 
+      lowerIngredient.contains(allergy.toLowerCase()) || 
+      allergy.toLowerCase().contains(lowerIngredient)
+    );
+  }
+
+  /// Returns a list of ingredients from the provided list that match the user's allergies.
+  List<String> getAllergenIngredients(List<String> ingredients) {
+    if (allergies.isEmpty) return [];
+    return ingredients.where((ingredient) => hasAllergy(ingredient)).toList();
+  }
 
   // JSON Serialization
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -49,6 +68,7 @@ class UserModel {
       profileImageUrl: json['profile_image_url'] as String?,
       organizationName: json['organization_name'] as String?,
       recipientType: json['recipient_type'] as String?,
+      allergies: List<String>.from(json['allergies'] ?? []),
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
     );
@@ -67,6 +87,7 @@ class UserModel {
       'profile_image_url': profileImageUrl,
       'organization_name': organizationName,
       'recipient_type': recipientType,
+      'allergies': allergies,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -85,6 +106,7 @@ class UserModel {
     String? profileImageUrl,
     String? organizationName,
     String? recipientType,
+    List<String>? allergies,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -100,6 +122,7 @@ class UserModel {
       profileImageUrl: profileImageUrl ?? this.profileImageUrl,
       organizationName: organizationName ?? this.organizationName,
       recipientType: recipientType ?? this.recipientType,
+      allergies: allergies ?? this.allergies,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

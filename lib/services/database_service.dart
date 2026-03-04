@@ -199,6 +199,28 @@ class DatabaseService {
         .map((data) => data.map((json) => MessageModel.fromJson(json)).toList());
   }
 
+  Stream<List<MessageModel>> streamMessages(String requestId) {
+    try {
+      return _client
+          .from('messages')
+          .stream(primaryKey: ['message_id'])
+          .eq('request_id', requestId)
+          .order('created_at', ascending: true)
+          .map((data) {
+            return data.map((json) {
+              try {
+                return MessageModel.fromJson(json);
+              } catch (e) {
+                // Return a dummy object or handle parsing error gracefully
+                throw Exception('Error parsing message: $e');
+              }
+            }).toList();
+          });
+    } catch (e) {
+      throw Exception('Error setting up message stream: $e');
+    }
+  }
+
   // --- REWARDS OPERATIONS ---
 
   Future<List<RewardModel>> getLeaderboard({int limit = 20}) async {
@@ -230,8 +252,8 @@ class DatabaseService {
     try {
       await _client.from('support_tickets').insert({
         'user_id': userId,
-        'description': description,
-        'status': 'open',
+        'issue_description': description,
+        'ticket_status': 'open',
         'created_at': DateTime.now().toIso8601String(),
       });
     } catch (e) {

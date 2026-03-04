@@ -52,6 +52,12 @@ class _FoodListScreenState extends State<FoodListScreen> with SingleTickerProvid
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.isMyPosts ? 'My Donations' : 'Available Food'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadData,
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
@@ -158,7 +164,7 @@ class _FoodListScreenState extends State<FoodListScreen> with SingleTickerProvid
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          _buildStatusBadge(post.postStatus),
+                          _buildStatusBadge(post),
                         ],
                       ),
                       const SizedBox(height: 4),
@@ -195,7 +201,12 @@ class _FoodListScreenState extends State<FoodListScreen> with SingleTickerProvid
     );
   }
 
-  Widget _buildStatusBadge(String status) {
+  Widget _buildStatusBadge(FoodPostModel post) {
+    String status = post.postStatus;
+    if (post.isExpired && status == 'available') {
+      status = 'expired';
+    }
+
     Color color;
     switch (status) {
       case 'available': color = Colors.green; break;

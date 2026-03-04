@@ -15,6 +15,8 @@ class UserProvider with ChangeNotifier {
     _setLoading(true);
     try {
       await _dbService.updateUser(updatedUser);
+      // Update local state immediately
+      _targetUser = updatedUser;
       notifyListeners();
     } catch (e) {
       rethrow;
