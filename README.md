@@ -1,16 +1,8 @@
-# wajbat
+# Wajbat
 
-A new Flutter project.
+Wajbat is a Flutter-based mobile application designed to facilitate food donations and reduce waste. It connects donors (individuals or organizations) with recipients (individuals or charities), allowing for the posting, claiming, and tracking of food items. The app utilizes Supabase for backend services (authentication, database, storage) and integrates Google Gemini AI for ingredient detection.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+This project uses Flutter. Ensure you have the Flutter SDK installed on your system.
+For more information on Flutter, view the [online documentation](https://docs.flutter.dev/).
