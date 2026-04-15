@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -9,6 +10,7 @@ import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart' 
 import 'package:intl/intl.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_routes.dart';
 import '../../core/utils/validators.dart';
 import '../../core/utils/snackbar_helper.dart';
 import '../../core/widgets/custom_button.dart';
@@ -32,7 +34,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   final _locationController = TextEditingController();
   final _ingredientController = TextEditingController();
   
-  File? _image;
+  dynamic _image; // Use dynamic to support File (mobile) and CroppedFile (web)
   DateTime? _expirationDate;
   double? _latitude;
   double? _longitude;
@@ -91,12 +93,20 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 CropAspectRatioPreset.ratio16x9
               ],
             ),
+            WebUiSettings(
+              context: context,
+              presentStyle: WebPresentStyle.page,
+            ),
           ],
         );
 
         if (croppedFile != null && mounted) {
           setState(() {
-            _image = File(croppedFile.path);
+            if (kIsWeb) {
+              _image = croppedFile;
+            } else {
+              _image = File(croppedFile.path);
+            }
           });
         }
       }
@@ -212,7 +222,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
     if (success && mounted) {
       SnackbarHelper.showSuccess(context, 'Food post created successfully!');
-      Navigator.pop(context);
+      if (kIsWeb && !Navigator.canPop(context)) {
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
+      } else {
+        Navigator.pop(context);
+      }
     } else if (mounted) {
       SnackbarHelper.showError(context, foodProvider.errorMessage ?? 'Failed to create post');
     }
@@ -241,7 +255,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Colors.grey[300]!, style: BorderStyle.solid),
                     image: _image != null
-                        ? DecorationImage(image: FileImage(_image!), fit: BoxFit.cover)
+                        ? (kIsWeb 
+                            ? DecorationImage(image: NetworkImage(_image.path), fit: BoxFit.cover)
+                            : DecorationImage(image: FileImage(_image as File), fit: BoxFit.cover))
                         : null,
                   ),
                   child: _image == null

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -10,20 +11,28 @@ class StorageService {
   final Uuid _uuid = const Uuid();
 
   // Upload Profile Image
-  Future<String?> uploadProfileImage(File image, String userId) async {
+  Future<String?> uploadProfileImage(dynamic image, String userId) async {
     try {
-      final File compressedImage = await _compressImage(image);
+      final dynamic processedImage = await _processImage(image);
       final String fileExt = image.path.split('.').last;
       final String fileName = '${_uuid.v4()}.$fileExt';
       // Bucket: profile_images
       // Path: userId/filename
       final String filePath = '$userId/$fileName';
 
-      await _client.storage.from('profile_images').upload(
-        filePath,
-        compressedImage,
-        fileOptions: const FileOptions(contentType: 'image/jpeg'),
-      );
+      if (kIsWeb) {
+        await _client.storage.from('profile_images').uploadBinary(
+          filePath,
+          processedImage,
+          fileOptions: const FileOptions(contentType: 'image/jpeg'),
+        );
+      } else {
+        await _client.storage.from('profile_images').upload(
+          filePath,
+          processedImage,
+          fileOptions: const FileOptions(contentType: 'image/jpeg'),
+        );
+      }
 
       return _client.storage.from('profile_images').getPublicUrl(filePath);
     } catch (e) {
@@ -32,20 +41,28 @@ class StorageService {
   }
 
   // Upload Food Image
-  Future<String?> uploadFoodImage(File image, String userId) async {
+  Future<String?> uploadFoodImage(dynamic image, String userId) async {
     try {
-      final File compressedImage = await _compressImage(image);
+      final dynamic processedImage = await _processImage(image);
       final String fileExt = image.path.split('.').last;
       final String fileName = '${_uuid.v4()}.$fileExt';
       // Bucket: food_images
       // Path: userId/filename
       final String filePath = '$userId/$fileName';
 
-      await _client.storage.from('food_images').upload(
-        filePath,
-        compressedImage,
-        fileOptions: const FileOptions(contentType: 'image/jpeg'),
-      );
+      if (kIsWeb) {
+        await _client.storage.from('food_images').uploadBinary(
+          filePath,
+          processedImage,
+          fileOptions: const FileOptions(contentType: 'image/jpeg'),
+        );
+      } else {
+        await _client.storage.from('food_images').upload(
+          filePath,
+          processedImage,
+          fileOptions: const FileOptions(contentType: 'image/jpeg'),
+        );
+      }
 
       return _client.storage.from('food_images').getPublicUrl(filePath);
     } catch (e) {
@@ -76,27 +93,32 @@ class StorageService {
     }
   }
 
-  // Helper: Compress Image
-  Future<File> _compressImage(File file) async {
+  // Helper: Process/Compress Image
+  Future<dynamic> _processImage(dynamic image) async {
+    if (kIsWeb) {
+      // On Web, we return the bytes for Supabase upload
+      return await image.readAsBytes();
+    }
+
+    // On Mobile, we compress
     final tempDir = await getTemporaryDirectory();
     final path = tempDir.path;
-    final String fileExt = file.path.split('.').last;
+    final String fileExt = image.path.split('.').last;
     final String fileName = '${_uuid.v4()}.$fileExt';
     final targetPath = '$path/$fileName';
 
     var result = await FlutterImageCompress.compressAndGetFile(
-      file.absolute.path,
+      image is File ? image.absolute.path : image.path,
       targetPath,
-      quality: 70, // Adjust quality as needed
+      quality: 70,
       minWidth: 1024,
       minHeight: 1024,
     );
 
     if (result == null) {
-      return file; // Return original if compression fails
+      return image is File ? image : File(image.path);
     }
 
-    // Returning File object from XFile
     return File(result.path);
   }
 }

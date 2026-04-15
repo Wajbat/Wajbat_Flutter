@@ -12,6 +12,7 @@ import '../requests/my_requests_screen.dart';
 import '../requests/incoming_requests_screen.dart';
 import '../profile/profile_screen.dart';
 import '../chat/chat_list_screen.dart';
+import '../../core/localization/app_localizations.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -54,30 +55,30 @@ class _HomeScreenState extends State<HomeScreen> {
         selectedItemColor: AppColors.primary,
         unselectedItemColor: Colors.grey,
         items: [
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Home',
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.home_outlined),
+            activeIcon: const Icon(Icons.home),
+            label: AppLocalizations.of(context)?.translate('home') ?? 'Home',
           ),
           BottomNavigationBarItem(
             icon: Icon(isDonor ? Icons.list_alt_outlined : Icons.search_outlined),
             activeIcon: Icon(isDonor ? Icons.list_alt : Icons.search),
-            label: isDonor ? 'My Posts' : 'Browse',
+            label: isDonor ? (AppLocalizations.of(context)?.translate('my_posts') ?? 'My Posts') : (AppLocalizations.of(context)?.translate('browse') ?? 'Browse'),
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.inbox_outlined),
-            activeIcon: Icon(Icons.inbox),
-            label: 'Requests',
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.inbox_outlined),
+            activeIcon: const Icon(Icons.inbox),
+            label: AppLocalizations.of(context)?.translate('requests') ?? 'Requests',
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.chat_bubble_outline),
-            activeIcon: Icon(Icons.chat_bubble),
-            label: 'Chat',
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.chat_bubble_outline),
+            activeIcon: const Icon(Icons.chat_bubble),
+            label: AppLocalizations.of(context)?.translate('chat') ?? 'Chat',
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Profile',
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.person_outline),
+            activeIcon: const Icon(Icons.person),
+            label: AppLocalizations.of(context)?.translate('profile') ?? 'Profile',
           ),
         ],
       ),

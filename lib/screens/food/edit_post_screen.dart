@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -9,6 +10,7 @@ import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart' 
 import 'package:intl/intl.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_routes.dart';
 import '../../core/utils/validators.dart';
 import '../../core/utils/snackbar_helper.dart';
 import '../../core/widgets/custom_button.dart';
@@ -32,7 +34,7 @@ class _EditPostScreenState extends State<EditPostScreen> {
   late TextEditingController _locationController;
   final _ingredientController = TextEditingController();
   
-  File? _newImage;
+  dynamic _newImage; // Use dynamic to support File (mobile) and CroppedFile (web)
   DateTime? _expirationDate;
   double? _latitude;
   double? _longitude;
@@ -116,12 +118,20 @@ class _EditPostScreenState extends State<EditPostScreen> {
                 CropAspectRatioPreset.ratio16x9
               ],
             ),
+            WebUiSettings(
+              context: context,
+              presentStyle: WebPresentStyle.page,
+            ),
           ],
         );
 
         if (croppedFile != null && mounted) {
           setState(() {
-            _newImage = File(croppedFile.path);
+            if (kIsWeb) {
+              _newImage = croppedFile;
+            } else {
+              _newImage = File(croppedFile.path);
+            }
           });
         }
       }
@@ -241,7 +251,11 @@ class _EditPostScreenState extends State<EditPostScreen> {
 
     if (success && mounted) {
       SnackbarHelper.showSuccess(context, 'Food post updated successfully!');
-      Navigator.pop(context);
+      if (kIsWeb && !Navigator.canPop(context)) {
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
+      } else {
+        Navigator.pop(context);
+      }
     } else if (mounted) {
       SnackbarHelper.showError(context, foodProvider.errorMessage ?? 'Failed to update post');
     }
@@ -270,7 +284,9 @@ class _EditPostScreenState extends State<EditPostScreen> {
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Colors.grey[300]!, style: BorderStyle.solid),
                     image: _newImage != null
-                        ? DecorationImage(image: FileImage(_newImage!), fit: BoxFit.cover)
+                        ? (kIsWeb 
+                            ? DecorationImage(image: NetworkImage(_newImage.path), fit: BoxFit.cover)
+                            : DecorationImage(image: FileImage(_newImage as File), fit: BoxFit.cover))
                         : (_originalPost?.imageUrl != null
                             ? DecorationImage(image: NetworkImage(_originalPost!.imageUrl!), fit: BoxFit.cover)
                             : null),

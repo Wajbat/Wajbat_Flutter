@@ -17,7 +17,7 @@ class AIService {
     );
   }
 
-  Future<List<String>> detectIngredientsFromImage(File imageFile) async {
+  Future<List<String>> detectIngredientsFromImage(dynamic imageFile) async {
     try {
       final imageBytes = await imageFile.readAsBytes();
       final content = [

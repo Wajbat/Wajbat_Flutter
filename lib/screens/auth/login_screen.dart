@@ -9,7 +9,7 @@ import '../../core/widgets/loading_indicator.dart';
 import '../../models/user_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/language_provider.dart';
-
+import '../../core/localization/app_localizations.dart';
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -152,7 +152,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 
                 // Welcome Title
                 Text(
-                  'Welcome Back',
+                  AppLocalizations.of(context)?.translate('welcome_back') ?? 'Welcome Back',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
@@ -163,8 +163,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 // Email
                 CustomTextField(
                   controller: _emailController,
-                  label: 'Email',
-                  hint: 'Enter your email',
+                  label: AppLocalizations.of(context)?.translate('email') ?? 'Email',
+                  hint: AppLocalizations.of(context)?.translate('email') ?? 'Enter your email',
                   keyboardType: TextInputType.emailAddress,
                   prefixIcon: Icons.email_outlined,
                   validator: Validators.validateEmail,
@@ -174,8 +174,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 // Password
                 CustomTextField(
                   controller: _passwordController,
-                  label: 'Password',
-                  hint: 'Enter your password',
+                  label: AppLocalizations.of(context)?.translate('password') ?? 'Password',
+                  hint: AppLocalizations.of(context)?.translate('password') ?? 'Enter your password',
                   obscureText: !_isPasswordVisible,
                   prefixIcon: Icons.lock_outlined,
                   validator: Validators.validatePassword,
@@ -198,7 +198,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: () {
                       Navigator.pushNamed(context, AppRoutes.forgotPassword);
                     },
-                    child: const Text('Forgot Password?'),
+                    child: Text(AppLocalizations.of(context)?.translate('forgot_password') ?? 'Forgot Password?'),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -207,7 +207,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 authProvider.isLoading
                     ? const LoadingIndicator()
                     : CustomButton(
-                        text: 'Login',
+                        text: AppLocalizations.of(context)?.translate('login') ?? 'Login',
                         onPressed: _handleLogin,
                       ),
                 
@@ -217,12 +217,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text("Don't have an account?"),
+                    Text(AppLocalizations.of(context)?.translate('dont_have_account') ?? "Don't have an account?"),
                     TextButton(
                       onPressed: () {
                         Navigator.pushNamed(context, AppRoutes.register);
                       },
-                      child: const Text('Sign Up'),
+                      child: Text(AppLocalizations.of(context)?.translate('register') ?? 'Sign Up'),
                     ),
                   ],
                 ),

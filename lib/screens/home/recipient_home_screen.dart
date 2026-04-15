@@ -7,6 +7,7 @@ import '../../providers/food_post_provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
 import '../../models/food_post_model.dart';
+import '../../core/localization/app_localizations.dart';
 
 class RecipientHomeScreen extends StatefulWidget {
   const RecipientHomeScreen({super.key});
@@ -45,6 +46,18 @@ class _RecipientHomeScreenState extends State<RecipientHomeScreen> {
     super.dispose();
   }
 
+  String _translateCategory(BuildContext context, String cat) {
+    switch (cat) {
+      case 'All': return AppLocalizations.of(context)?.translate('all') ?? 'All';
+      case 'Prepared Food': return AppLocalizations.of(context)?.translate('prepared_food') ?? 'Prepared Food';
+      case 'Fruits & Veggies': return AppLocalizations.of(context)?.translate('fruits_veggies') ?? 'Fruits & Veggies';
+      case 'Bakery': return AppLocalizations.of(context)?.translate('bakery') ?? 'Bakery';
+      case 'Groceries': return AppLocalizations.of(context)?.translate('groceries') ?? 'Groceries';
+      case 'Other': return AppLocalizations.of(context)?.translate('other') ?? 'Other';
+      default: return cat;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
@@ -68,12 +81,12 @@ class _RecipientHomeScreenState extends State<RecipientHomeScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Hello, ${user?.name ?? 'Guest'}',
+                          '${AppLocalizations.of(context)?.translate('hello') ?? 'Hello'}, ${user?.name ?? AppLocalizations.of(context)?.translate('guest') ?? 'Guest'}',
                           style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                         ),
-                        const Text(
-                          'Find food near you',
-                          style: TextStyle(fontSize: 14, color: Colors.grey),
+                        Text(
+                          AppLocalizations.of(context)?.translate('find_food_near_you') ?? 'Find food near you',
+                          style: const TextStyle(fontSize: 14, color: Colors.grey),
                         ),
                       ],
                     ),
@@ -95,7 +108,7 @@ class _RecipientHomeScreenState extends State<RecipientHomeScreen> {
                         controller: _searchController,
                         onChanged: (val) => setState(() {}),
                         decoration: InputDecoration(
-                          hintText: 'Search food...',
+                          hintText: AppLocalizations.of(context)?.translate('search_food') ?? 'Search food...',
                           prefixIcon: const Icon(Icons.search),
                           filled: true,
                           fillColor: Colors.grey[100],
@@ -137,7 +150,7 @@ class _RecipientHomeScreenState extends State<RecipientHomeScreen> {
                     return Padding(
                       padding: const EdgeInsets.only(right: 8.0),
                       child: FilterChip(
-                        label: Text(cat),
+                        label: Text(_translateCategory(context, cat)),
                         selected: isSelected,
                         onSelected: (val) {
                           setState(() => _selectedCategory = cat);
@@ -186,7 +199,7 @@ class _RecipientHomeScreenState extends State<RecipientHomeScreen> {
           children: [
             Icon(Icons.search_off, size: 60, color: Colors.grey[300]),
             const SizedBox(height: 16),
-            const Text('No food available nearby', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+            Text(AppLocalizations.of(context)?.translate('no_food_nearby') ?? 'No food available nearby', style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
           ],
         ),
       );
@@ -272,8 +285,8 @@ class _RecipientHomeScreenState extends State<RecipientHomeScreen> {
                         Expanded(
                           child: Text(
                             post.isExpired 
-                                ? 'EXPIRED: ${_formatDate(post.expirationDate)}'
-                                : 'Expires: ${_formatDate(post.expirationDate)}',
+                                ? '${AppLocalizations.of(context)?.translate('exp') ?? 'EXPIRED:'} ${_formatDate(post.expirationDate)}'
+                                : '${AppLocalizations.of(context)?.translate('expires') ?? 'Expires:'} ${_formatDate(post.expirationDate)}',
                             style: TextStyle(
                               fontSize: 10, 
                               color: post.isExpired ? Colors.red : Colors.black54,
@@ -288,10 +301,10 @@ class _RecipientHomeScreenState extends State<RecipientHomeScreen> {
                     children: [
                       CircleAvatar(radius: 8, backgroundColor: AppColors.primary.withOpacity(0.1), child: const Icon(Icons.person, size: 10, color: AppColors.primary)),
                       const SizedBox(width: 4),
-                      const Expanded(
+                      Expanded(
                         child: Text(
-                          'Donor Name', // In real app, fetch from donorId or user table
-                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                          AppLocalizations.of(context)?.translate('donor_name') ?? 'Donor Name', // In real app, fetch from donorId or user table
+                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
                           maxLines: 1,
                         ),
                       ),
@@ -318,23 +331,23 @@ class _RecipientHomeScreenState extends State<RecipientHomeScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Filter Results', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              Text(AppLocalizations.of(context)?.translate('filter_results') ?? 'Filter Results', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               const SizedBox(height: 20),
-              const Text('Distance Radius', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(AppLocalizations.of(context)?.translate('distance_radius') ?? 'Distance Radius', style: const TextStyle(fontWeight: FontWeight.bold)),
               Slider(value: 5, min: 1, max: 20, onChanged: (v) {}),
               const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [Text('1km'), Text('20km')],
               ),
               const SizedBox(height: 20),
-              const Text('Sort By', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(AppLocalizations.of(context)?.translate('sort_by') ?? 'Sort By', style: const TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
                 children: [
-                  ChoiceChip(label: const Text('Nearest'), selected: true, onSelected: (v) {}),
-                  ChoiceChip(label: const Text('Expiring Soon'), selected: false, onSelected: (v) {}),
-                  ChoiceChip(label: const Text('Recently Added'), selected: false, onSelected: (v) {}),
+                  ChoiceChip(label: Text(AppLocalizations.of(context)?.translate('nearest') ?? 'Nearest'), selected: true, onSelected: (v) {}),
+                  ChoiceChip(label: Text(AppLocalizations.of(context)?.translate('expiring_soon') ?? 'Expiring Soon'), selected: false, onSelected: (v) {}),
+                  ChoiceChip(label: Text(AppLocalizations.of(context)?.translate('recently_added') ?? 'Recently Added'), selected: false, onSelected: (v) {}),
                 ],
               ),
               const SizedBox(height: 30),
@@ -347,7 +360,7 @@ class _RecipientHomeScreenState extends State<RecipientHomeScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: const Text('Apply Filters', style: TextStyle(color: Colors.white)),
+                  child: Text(AppLocalizations.of(context)?.translate('apply_filters') ?? 'Apply Filters', style: const TextStyle(color: Colors.white)),
                 ),
               ),
               const SizedBox(height: 10),

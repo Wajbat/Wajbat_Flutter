@@ -1,10 +1,12 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_routes.dart';
 import '../../core/widgets/custom_button.dart';
 import '../../core/widgets/custom_text_field.dart';
 import '../../core/widgets/loading_indicator.dart';
@@ -32,7 +34,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   String? _recipientType;
   List<String> _allergies = [];
 
-  File? _newImage;
+  dynamic _newImage; // Use dynamic to support File (mobile) and CroppedFile (web)
   bool _isLoading = false;
   final ImagePicker _picker = ImagePicker();
   final StorageService _storageService = StorageService();
@@ -80,12 +82,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               title: 'Crop Image',
               aspectRatioLockEnabled: true,
             ),
+            WebUiSettings(
+              context: context,
+              presentStyle: WebPresentStyle.page,
+            ),
           ],
         );
 
         if (croppedFile != null) {
           setState(() {
-            _newImage = File(croppedFile.path);
+            if (kIsWeb) {
+              _newImage = croppedFile;
+            } else {
+              _newImage = File(croppedFile.path);
+            }
           });
         }
       }
@@ -179,7 +189,11 @@ Future<void> _saveProfile() async {
 
     if (mounted) {
       SnackbarHelper.showSuccess(context, 'Profile updated successfully');
-      Navigator.pop(context);
+      if (kIsWeb && !Navigator.canPop(context)) {
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
+      } else {
+        Navigator.pop(context);
+      }
     }
   } catch (e) {
     if (mounted) {
@@ -228,7 +242,9 @@ Widget build(BuildContext context) {
                   CircleAvatar(
                     radius: 60,
                     backgroundImage: _newImage != null
-                        ? FileImage(_newImage!)
+                        ? (kIsWeb 
+                            ? NetworkImage(_newImage.path) as ImageProvider
+                            : FileImage(_newImage as File))
                         : (user.profileImageUrl != null
                         ? CachedNetworkImageProvider(user.profileImageUrl!) as ImageProvider
                         : null),

@@ -7,6 +7,7 @@ import '../../core/widgets/custom_button.dart';
 import '../../core/widgets/custom_text_field.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../providers/auth_provider.dart';
+import '../../core/localization/app_localizations.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -170,7 +171,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Account')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)?.translate('create_account_title') ?? 'Create Account')),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -182,8 +183,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 // Name
                 CustomTextField(
                   controller: _nameController,
-                  label: 'Full Name',
-                  hint: 'Enter your name',
+                  label: AppLocalizations.of(context)?.translate('full_name') ?? 'Full Name',
+                  hint: AppLocalizations.of(context)?.translate('full_name') ?? 'Enter your name',
                   prefixIcon: Icons.person_outline,
                   validator: (val) => Validators.validateName(val),
                 ),
@@ -192,8 +193,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 // Email
                 CustomTextField(
                   controller: _emailController,
-                  label: 'Email',
-                  hint: 'Enter your email',
+                  label: AppLocalizations.of(context)?.translate('email') ?? 'Email',
+                  hint: AppLocalizations.of(context)?.translate('email') ?? 'Enter your email',
                   keyboardType: TextInputType.emailAddress,
                   prefixIcon: Icons.email_outlined,
                   validator: Validators.validateEmail,
@@ -203,8 +204,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 // Phone (Optional)
                 CustomTextField(
                   controller: _phoneController,
-                  label: 'Phone Number (Optional)',
-                  hint: 'Enter your phone number',
+                  label: AppLocalizations.of(context)?.translate('phone_number') ?? 'Phone Number (Optional)',
+                  hint: AppLocalizations.of(context)?.translate('phone_number') ?? 'Enter your phone number',
                   keyboardType: TextInputType.phone,
                   prefixIcon: Icons.phone_outlined,
                 ),
@@ -213,7 +214,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 // Password
                 CustomTextField(
                   controller: _passwordController,
-                  label: 'Password',
+                  label: AppLocalizations.of(context)?.translate('password') ?? 'Password',
                   hint: 'Min 8 chars, 1 upper, 1 number',
                   obscureText: !_isPasswordVisible,
                   prefixIcon: Icons.lock_outlined,
@@ -261,12 +262,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 24),
                 
                 // --- ROLE SELECTION ---
-                Text('I want to:', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                Text(AppLocalizations.of(context)?.translate('role') ?? 'I want to:', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 
                 // Donate Checkbox
                 CheckboxListTile(
-                  title: const Text('Donate Food'),
+                  title: Text(AppLocalizations.of(context)?.translate('donor') ?? 'Donate Food'),
                   subtitle: const Text('Post surplus food for those in need'),
                   secondary: const Icon(Icons.volunteer_activism, color: Colors.green),
                   value: _isDonor,
@@ -281,7 +282,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     padding: const EdgeInsets.only(left: 16.0, bottom: 8.0),
                     child: CustomTextField(
                       controller: _orgNameController,
-                      label: 'Organization Name (Optional)',
+                      label: AppLocalizations.of(context)?.translate('organization_name') ?? 'Organization Name (Optional)',
                       hint: 'e.g. Restaurant Name',
                       prefixIcon: Icons.business,
                     ),
@@ -290,7 +291,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 // Receive Checkbox
                 CheckboxListTile(
-                  title: const Text('Receive Food'),
+                  title: Text(AppLocalizations.of(context)?.translate('recipient') ?? 'Receive Food'),
                   subtitle: const Text('Browse and request available food donations'),
                   secondary: const Icon(Icons.food_bank, color: Colors.orange),
                   value: _isRecipient,
@@ -336,7 +337,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         const Icon(Icons.warning_amber_rounded, color: Colors.red),
                         const SizedBox(width: 8),
                         Text(
-                          'Food Allergies (Optional)',
+                          AppLocalizations.of(context)?.translate('food_allergies') ?? 'Food Allergies (Optional)',
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: Colors.red[800],
@@ -387,7 +388,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           child: CustomTextField(
                             controller: _allergyController,
                             label: 'Add allergy',
-                            hint: 'e.g., peanuts, dairy',
+                            hint: AppLocalizations.of(context)?.translate('add_allergy_hint') ?? 'e.g., peanuts, dairy',
                             prefixIcon: Icons.add_alert_outlined,
                           ),
                         ),
@@ -432,7 +433,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 authProvider.isLoading
                     ? const LoadingIndicator()
                     : CustomButton(
-                        text: 'Create Account',
+                        text: AppLocalizations.of(context)?.translate('register') ?? 'Create Account',
                         onPressed: _handleRegister,
                       ),
                       
@@ -447,7 +448,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       onPressed: () {
                         Navigator.pop(context);
                       },
-                      child: const Text('Login'),
+                      child: Text(AppLocalizations.of(context)?.translate('login') ?? 'Login'),
                     ),
                   ],
                 ),

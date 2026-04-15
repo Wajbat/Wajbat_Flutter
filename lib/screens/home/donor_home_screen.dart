@@ -8,6 +8,7 @@ import '../../providers/request_provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
 import '../../models/food_post_model.dart';
+import '../../core/localization/app_localizations.dart';
 
 class DonorHomeScreen extends StatefulWidget {
   const DonorHomeScreen({super.key});
@@ -60,12 +61,12 @@ class _DonorHomeScreenState extends State<DonorHomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Hello, ${user?.name ?? 'Donor'}',
+                      '${AppLocalizations.of(context)?.translate('hello') ?? 'Hello'}, ${user?.name ?? AppLocalizations.of(context)?.translate('donor') ?? 'Donor'}',
                       style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
                     ),
-                    const Text(
-                      'Ready to make a difference?',
-                      style: TextStyle(fontSize: 12, color: Colors.white70),
+                    Text(
+                      AppLocalizations.of(context)?.translate('ready_to_make_difference') ?? 'Ready to make a difference?',
+                      style: const TextStyle(fontSize: 12, color: Colors.white70),
                     ),
                   ],
                 ),
@@ -88,7 +89,7 @@ class _DonorHomeScreenState extends State<DonorHomeScreen> {
                     const SizedBox(height: 24),
                     
                     // Recent Posts Section
-                    _buildSectionHeader('Recent Posts', () {
+                    _buildSectionHeader(AppLocalizations.of(context)?.translate('recent_posts') ?? 'Recent Posts', () {
                        // Navigate to Manage Posts
                     }),
                     const SizedBox(height: 12),
@@ -97,7 +98,7 @@ class _DonorHomeScreenState extends State<DonorHomeScreen> {
                     const SizedBox(height: 24),
                     
                     // Pending Requests Section
-                    _buildSectionHeader('Pending Requests', () {
+                    _buildSectionHeader(AppLocalizations.of(context)?.translate('pending_requests') ?? 'Pending Requests', () {
                        // Navigate to All Requests
                     }),
                     const SizedBox(height: 12),
@@ -128,10 +129,10 @@ class _DonorHomeScreenState extends State<DonorHomeScreen> {
       mainAxisSpacing: 12,
       childAspectRatio: 2.5,
       children: [
-        _buildStatCard('Total Donations', food.myPosts.length.toString(), Icons.volunteer_activism, Colors.blue),
-        _buildStatCard('Active Posts', food.myPosts.where((p) => p.postStatus == 'available').length.toString(), Icons.restaurant, Colors.green),
-        _buildStatCard('Impact Points', points.toString(), Icons.stars, Colors.orange),
-        _buildStatCard('Pending Req', requests.incomingRequests.where((r) => r.requestStatus == 'pending').length.toString(), Icons.pending_actions, Colors.red),
+        _buildStatCard(AppLocalizations.of(context)?.translate('total_donations') ?? 'Total Donations', food.myPosts.length.toString(), Icons.volunteer_activism, Colors.blue),
+        _buildStatCard(AppLocalizations.of(context)?.translate('active_posts') ?? 'Active Posts', food.myPosts.where((p) => p.postStatus == 'available').length.toString(), Icons.restaurant, Colors.green),
+        _buildStatCard(AppLocalizations.of(context)?.translate('impact_points') ?? 'Impact Points', points.toString(), Icons.stars, Colors.orange),
+        _buildStatCard(AppLocalizations.of(context)?.translate('pending_requests') ?? 'Pending Req', requests.incomingRequests.where((r) => r.requestStatus == 'pending').length.toString(), Icons.pending_actions, Colors.red),
       ],
     );
   }
@@ -168,14 +169,14 @@ class _DonorHomeScreenState extends State<DonorHomeScreen> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        TextButton(onPressed: onSeeAll, child: const Text('View All')),
+        TextButton(onPressed: onSeeAll, child: Text(AppLocalizations.of(context)?.translate('view_all') ?? 'View All')),
       ],
     );
   }
 
   Widget _buildRecentPosts(FoodPostProvider provider) {
     if (provider.isLoading) return _buildShimmerList();
-    if (provider.myPosts.isEmpty) return _buildEmptyState('No posts yet', 'Start sharing surplus food.');
+    if (provider.myPosts.isEmpty) return _buildEmptyState(AppLocalizations.of(context)?.translate('no_posts_yet') ?? 'No posts yet', AppLocalizations.of(context)?.translate('start_sharing_surplus') ?? 'Start sharing surplus food.');
 
     final recent = provider.myPosts.take(5).toList();
     return SizedBox(
@@ -230,7 +231,7 @@ class _DonorHomeScreenState extends State<DonorHomeScreen> {
                               ),
                             ),
                             Text(
-                              'Exp: ${_formatDate(post.expirationDate)}',
+                              '${AppLocalizations.of(context)?.translate('exp') ?? 'Exp: '}${_formatDate(post.expirationDate)}',
                               style: const TextStyle(fontSize: 8, color: Colors.black54),
                             ),
                           ],
@@ -251,7 +252,7 @@ class _DonorHomeScreenState extends State<DonorHomeScreen> {
     if (provider.isLoading) return _buildShimmerList(vertical: true);
     final pending = provider.incomingRequests.where((r) => r.requestStatus == 'pending').take(3).toList();
     
-    if (pending.isEmpty) return _buildEmptyState('No pending requests', 'Requests will appear here.');
+    if (pending.isEmpty) return _buildEmptyState(AppLocalizations.of(context)?.translate('no_pending_requests') ?? 'No pending requests', AppLocalizations.of(context)?.translate('requests_appear_here') ?? 'Requests will appear here.');
 
     return ListView.builder(
       shrinkWrap: true,
@@ -265,8 +266,8 @@ class _DonorHomeScreenState extends State<DonorHomeScreen> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey[200]!)),
           child: ListTile(
             leading: CircleAvatar(backgroundColor: AppColors.secondary.withOpacity(0.2), child: const Icon(Icons.person, color: AppColors.secondary)),
-            title: Text('Request for ${req.postId.substring(0, 8)}...', style: const TextStyle(fontWeight: FontWeight.bold)), // In real app, fetch post title
-            subtitle: Text('Status: ${req.requestStatus}'),
+            title: Text('${AppLocalizations.of(context)?.translate('request_for') ?? 'Request for '} ${req.postId.substring(0, 8)}...', style: const TextStyle(fontWeight: FontWeight.bold)), // In real app, fetch post title
+            subtitle: Text('${AppLocalizations.of(context)?.translate('status') ?? 'Status: '}${req.requestStatus}'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {},
           ),
@@ -287,13 +288,13 @@ class _DonorHomeScreenState extends State<DonorHomeScreen> {
         ),
         child: Row(
           children: [
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Share Surplus Food', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                  SizedBox(height: 4),
-                  Text('Quickly post items to help others.', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                  Text(AppLocalizations.of(context)?.translate('share_surplus_food') ?? 'Share Surplus Food', style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  Text(AppLocalizations.of(context)?.translate('quickly_post_items') ?? 'Quickly post items to help others.', style: const TextStyle(color: Colors.white70, fontSize: 12)),
                 ],
               ),
             ),

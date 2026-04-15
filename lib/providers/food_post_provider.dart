@@ -59,7 +59,7 @@ class FoodPostProvider with ChangeNotifier {
     required String location,
     required double? latitude,
     required double? longitude,
-    required File image,
+    required dynamic image,
     required List<String> ingredients,
     required String donorId,
   }) async {
@@ -105,7 +105,7 @@ class FoodPostProvider with ChangeNotifier {
   }
 
   // Update Post
-  Future<bool> updatePost(FoodPostModel post, File? newImage) async {
+  Future<bool> updatePost(FoodPostModel post, dynamic newImage) async {
     _setLoading(true);
     try {
       String? imageUrl = post.imageUrl;
