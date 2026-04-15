@@ -110,6 +110,8 @@ class _EditPostScreenState extends State<EditPostScreen> {
             ),
             IOSUiSettings(
               title: 'Crop Image',
+              aspectRatioLockEnabled: false,
+              resetAspectRatioEnabled: true,
               aspectRatioPresets: [
                 CropAspectRatioPreset.square,
                 CropAspectRatioPreset.ratio3x2,
