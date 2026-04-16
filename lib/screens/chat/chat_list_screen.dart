@@ -10,7 +10,9 @@ import '../../models/user_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/request_provider.dart';
 import '../../providers/user_provider.dart';
+import '../../providers/language_provider.dart';
 import '../../core/widgets/loading_indicator.dart';
+import '../../core/localization/app_localizations.dart';
 
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({super.key});
@@ -54,7 +56,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
     final requestProvider = Provider.of<RequestProvider>(context);
     final currentUser = authProvider.currentUser;
 
-    if (currentUser == null) return const Center(child: Text('Please login to view messages'));
+    if (currentUser == null) return Center(child: Text(AppLocalizations.of(context)?.translate('please_login_messages') ?? 'Please login to view messages'));
 
     // Combine requests where user is either donor or recipient
     // Determine the "other" user ID for each request
@@ -80,7 +82,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Messages'),
+        title: Text(AppLocalizations.of(context)?.translate('messages') ?? 'Messages'),
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
@@ -102,7 +104,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 controller: _searchController,
                 onChanged: (val) => setState(() => _searchQuery = val.toLowerCase()),
                 decoration: InputDecoration(
-                  hintText: 'Search conversations...',
+                  hintText: AppLocalizations.of(context)?.translate('search_conversations') ?? 'Search conversations...',
                   prefixIcon: const Icon(Icons.search),
                   filled: true,
                   fillColor: Colors.grey[100],
@@ -124,7 +126,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                         children: [
                           Icon(Icons.chat_bubble_outline, size: 64, color: Colors.grey[300]),
                           const SizedBox(height: 16),
-                          const Text('No messages yet', style: TextStyle(color: Colors.grey)),
+                          Text(AppLocalizations.of(context)?.translate('no_messages_yet') ?? 'No messages yet', style: const TextStyle(color: Colors.grey)),
                         ],
                       ),
                     )
@@ -230,7 +232,7 @@ class _ChatTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                timeago.format(request.updatedAt, locale: 'en_short'),
+                timeago.format(request.updatedAt, locale: Provider.of<LanguageProvider>(context, listen: false).currentLanguage == 'ar' ? 'ar_short' : 'en_short'),
                 style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
               // Unread Badge (Optional implementation)

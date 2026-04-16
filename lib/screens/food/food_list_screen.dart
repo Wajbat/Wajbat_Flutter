@@ -7,6 +7,7 @@ import '../../core/constants/app_routes.dart';
 import '../../models/food_post_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/food_post_provider.dart';
+import '../../core/localization/app_localizations.dart';
 
 
 class FoodListScreen extends StatefulWidget {
@@ -51,7 +52,9 @@ class _FoodListScreenState extends State<FoodListScreen> with SingleTickerProvid
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.isMyPosts ? 'My Donations' : 'Available Food'),
+        title: Text(widget.isMyPosts 
+            ? (AppLocalizations.of(context)?.translate('my_donations') ?? 'My Donations')
+            : (AppLocalizations.of(context)?.translate('available_food_title') ?? 'Available Food')),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -64,11 +67,11 @@ class _FoodListScreenState extends State<FoodListScreen> with SingleTickerProvid
           labelColor: AppColors.primary,
           indicatorColor: AppColors.primary,
           unselectedLabelColor: Colors.grey,
-          tabs: const [
-            Tab(text: 'All'),
-            Tab(text: 'Available'),
-            Tab(text: 'Expired'),
-            Tab(text: 'Completed'),
+          tabs: [
+            Tab(text: AppLocalizations.of(context)?.translate('all') ?? 'All'),
+            Tab(text: AppLocalizations.of(context)?.translate('available') ?? 'Available'),
+            Tab(text: AppLocalizations.of(context)?.translate('expired') ?? 'Expired'),
+            Tab(text: AppLocalizations.of(context)?.translate('completed') ?? 'Completed'),
           ],
         ),
       ),
@@ -105,7 +108,10 @@ class _FoodListScreenState extends State<FoodListScreen> with SingleTickerProvid
               children: [
                 Icon(Icons.inbox_outlined, size: 64, color: Colors.grey[300]),
                 const SizedBox(height: 16),
-                Text('No $filter posts found', style: const TextStyle(color: Colors.grey)),
+                Text(
+                  (AppLocalizations.of(context)?.translate('no_posts_found_filter') ?? 'No {filter} posts found').replaceAll('{filter}', AppLocalizations.of(context)?.translateDynamic(filter) ?? filter),
+                  style: const TextStyle(color: Colors.grey)
+                ),
               ],
             ),
           );
@@ -168,10 +174,10 @@ class _FoodListScreenState extends State<FoodListScreen> with SingleTickerProvid
                         ],
                       ),
                       const SizedBox(height: 4),
-                      Text('Quantity: ${post.quantity}', style: const TextStyle(fontSize: 12, color: Colors.black54)),
+                      Text('${AppLocalizations.of(context)?.translate('quantity_label') ?? 'Quantity: '}${post.quantity}', style: const TextStyle(fontSize: 12, color: Colors.black54)),
                       const SizedBox(height: 4),
                       Text(
-                        'Expires: ${DateFormat('MMM dd, yyyy').format(post.expirationDate)}',
+                        '${AppLocalizations.of(context)?.translate('expires_label') ?? 'Expires: '}${DateFormat('MMM dd, yyyy').format(post.expirationDate)}',
                         style: const TextStyle(fontSize: 12, color: Colors.black54),
                       ),
                       const Spacer(),
@@ -181,12 +187,12 @@ class _FoodListScreenState extends State<FoodListScreen> with SingleTickerProvid
                           TextButton.icon(
                             onPressed: () => Navigator.pushNamed(context, AppRoutes.editPost, arguments: post),
                             icon: const Icon(Icons.edit, size: 16),
-                            label: const Text('Edit', style: TextStyle(fontSize: 12)),
+                            label: Text(AppLocalizations.of(context)?.translate('edit') ?? 'Edit', style: const TextStyle(fontSize: 12)),
                           ),
                           TextButton.icon(
                             onPressed: () => _confirmDelete(context, post),
                             icon: const Icon(Icons.delete, size: 16, color: Colors.red),
-                            label: const Text('Delete', style: TextStyle(fontSize: 12, color: Colors.red)),
+                            label: Text(AppLocalizations.of(context)?.translate('delete') ?? 'Delete', style: const TextStyle(fontSize: 12, color: Colors.red)),
                           ),
                         ],
                       ),
@@ -223,7 +229,7 @@ class _FoodListScreenState extends State<FoodListScreen> with SingleTickerProvid
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
-        status.toUpperCase(),
+        AppLocalizations.of(context)?.translateDynamic(status).toUpperCase() ?? status.toUpperCase(),
         style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold),
       ),
     );
@@ -233,16 +239,16 @@ class _FoodListScreenState extends State<FoodListScreen> with SingleTickerProvid
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Post?'),
-        content: const Text('Are you sure you want to remove this donation?'),
+        title: Text(AppLocalizations.of(context)?.translate('delete_post_title') ?? 'Delete Post?'),
+        content: Text(AppLocalizations.of(context)?.translate('delete_post_confirm') ?? 'Are you sure you want to remove this donation?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppLocalizations.of(context)?.translate('cancel') ?? 'Cancel')),
           TextButton(
             onPressed: () async {
               Navigator.pop(ctx);
               await Provider.of<FoodPostProvider>(context, listen: false).deletePost(post.postId);
             },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: Text(AppLocalizations.of(context)?.translate('delete') ?? 'Delete', style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),

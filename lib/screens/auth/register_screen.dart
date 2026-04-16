@@ -55,7 +55,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final text = _passwordController.text;
     if (text.isEmpty) return const SizedBox.shrink();
 
-    String strength = 'Weak';
+    String strength = AppLocalizations.of(context)?.translate('weak') ?? 'Weak';
     Color color = Colors.red;
     double progress = 0.3;
 
@@ -64,11 +64,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final hasMinLength = text.length >= 8;
 
     if (hasUpper && hasNumber && hasMinLength) {
-      strength = 'Strong';
+      strength = AppLocalizations.of(context)?.translate('strong') ?? 'Strong';
       color = Colors.green;
       progress = 1.0;
     } else if (hasMinLength && (hasUpper || hasNumber)) {
-      strength = 'Medium';
+      strength = AppLocalizations.of(context)?.translate('medium') ?? 'Medium';
       color = Colors.orange;
       progress = 0.6;
     }
@@ -84,7 +84,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
         const SizedBox(height: 4),
         Text(
-          'Strength: $strength',
+          '${AppLocalizations.of(context)?.translate('strength') ?? 'Strength: '}$strength',
           style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold),
         ),
       ],
@@ -97,7 +97,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (text.isEmpty) return;
 
     if (_allergies.contains(text)) {
-      SnackbarHelper.showError(context, 'Allergy already added');
+      SnackbarHelper.showError(context, AppLocalizations.of(context)?.translate('allergy_already_added') ?? 'Allergy already added');
       return;
     }
 
@@ -105,7 +105,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _allergies.add(text);
       _allergyController.clear();
     });
-    SnackbarHelper.showSuccess(context, 'Allergy added');
+    SnackbarHelper.showSuccess(context, AppLocalizations.of(context)?.translate('allergy_added') ?? 'Allergy added');
   }
 
   void _removeAllergy(String allergy) {
@@ -119,11 +119,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     
     // Custom Validation
     if (!_isDonor && !_isRecipient) {
-      SnackbarHelper.showError(context, 'Please select at least one role (Donate or Receive)');
+      SnackbarHelper.showError(context, AppLocalizations.of(context)?.translate('select_role_error') ?? 'Please select at least one role (Donate or Receive)');
       return;
     }
     if (!_termsAccepted) {
-      SnackbarHelper.showError(context, 'You must accept the Terms and Conditions');
+      SnackbarHelper.showError(context, AppLocalizations.of(context)?.translate('accept_terms_error') ?? 'You must accept the Terms and Conditions');
       return;
     }
 
@@ -157,7 +157,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       } else if (mounted) {
         SnackbarHelper.showError(
           context, 
-          authProvider.errorMessage ?? 'Registration failed'
+          authProvider.errorMessage ?? AppLocalizations.of(context)?.translate('registration_failed') ?? 'Registration failed'
         );
       }
     } catch (e) {
@@ -238,13 +238,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 // Confirm Password
                 CustomTextField(
                   controller: _confirmPasswordController,
-                  label: 'Confirm Password',
-                  hint: 'Re-enter your password',
+                  label: AppLocalizations.of(context)?.translate('confirm_password') ?? 'Confirm Password',
+                  hint: AppLocalizations.of(context)?.translate('reenter_password') ?? 'Re-enter your password',
                   obscureText: !_isConfirmPasswordVisible,
                   prefixIcon: Icons.lock_outlined,
                   validator: (val) {
                     if (val != _passwordController.text) {
-                      return 'Passwords do not match';
+                      return AppLocalizations.of(context)?.translate('passwords_match_error') ?? 'Passwords do not match';
                     }
                     return null;
                   },
@@ -271,7 +271,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   subtitle: const Text('Post surplus food for those in need'),
                   secondary: const Icon(Icons.volunteer_activism, color: Colors.green),
                   value: _isDonor,
-                  onChanged: (val) => setState(() => _isDonor = val ?? false),
+                  onChanged: (val) {
+                    setState(() {
+                      if (val == true && _isRecipient) {
+                        _isRecipient = false;
+                        SnackbarHelper.showInfo(context, AppLocalizations.of(context)?.translate('one_role_selection_warning') ?? 'One role can be selected at a time');
+                      }
+                      _isDonor = val ?? false;
+                    });
+                  },
                   contentPadding: EdgeInsets.zero,
                   controlAffinity: ListTileControlAffinity.leading,
                 ),
@@ -295,7 +303,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   subtitle: const Text('Browse and request available food donations'),
                   secondary: const Icon(Icons.food_bank, color: Colors.orange),
                   value: _isRecipient,
-                  onChanged: (val) => setState(() => _isRecipient = val ?? false),
+                  onChanged: (val) {
+                    setState(() {
+                      if (val == true && _isDonor) {
+                        _isDonor = false;
+                        SnackbarHelper.showInfo(context, AppLocalizations.of(context)?.translate('one_role_selection_warning') ?? 'One role can be selected at a time');
+                      }
+                      _isRecipient = val ?? false;
+                    });
+                  },
                   contentPadding: EdgeInsets.zero,
                   controlAffinity: ListTileControlAffinity.leading,
                 ),
@@ -307,14 +323,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: Column(
                       children: [
                         RadioListTile<String>(
-                          title: const Text('Individual'),
+                          title: Text(AppLocalizations.of(context)?.translate('individual') ?? 'Individual'),
                           value: 'individual',
                           groupValue: _recipientType,
                           onChanged: (val) => setState(() => _recipientType = val),
                           contentPadding: EdgeInsets.zero,
                         ),
                         RadioListTile<String>(
-                          title: const Text('Charity'),
+                          title: Text(AppLocalizations.of(context)?.translate('charity') ?? 'Charity'),
                           value: 'charity',
                           groupValue: _recipientType,
                           onChanged: (val) => setState(() => _recipientType = val),
@@ -346,9 +362,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ],
                     ),
                     const SizedBox(height: 4),
-                    const Text(
-                      'Do you have any food allergies? We\'ll warn you about posts containing these ingredients.',
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    Text(
+                      AppLocalizations.of(context)?.translate('allergy_instruction') ?? 'Do you have any food allergies? We\'ll warn you about posts containing these ingredients.',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                     const SizedBox(height: 12),
 
@@ -387,7 +403,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         Expanded(
                           child: CustomTextField(
                             controller: _allergyController,
-                            label: 'Add allergy',
+                            label: AppLocalizations.of(context)?.translate('add_allergy') ?? 'Add allergy',
                             hint: AppLocalizations.of(context)?.translate('add_allergy_hint') ?? 'e.g., peanuts, dairy',
                             prefixIcon: Icons.add_alert_outlined,
                           ),
@@ -407,11 +423,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ],
                     ),
                     const SizedBox(height: 4),
-                    const Padding(
-                      padding: EdgeInsets.only(left: 4.0),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4.0),
                       child: Text(
-                        'Add each ingredient separately. Tap + after typing each one.',
-                        style: TextStyle(fontSize: 11, color: Colors.grey),
+                        AppLocalizations.of(context)?.translate('allergy_instruction_detail') ?? 'Add each ingredient separately. Tap + after typing each one.',
+                        style: const TextStyle(fontSize: 11, color: Colors.grey),
                       ),
                     ),
                   ],
@@ -422,7 +438,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 CheckboxListTile(
                   value: _termsAccepted,
                   onChanged: (val) => setState(() => _termsAccepted = val ?? false),
-                  title: const Text('I agree to the Terms and Conditions'),
+                  title: Text(AppLocalizations.of(context)?.translate('terms_agree') ?? 'I agree to the Terms and Conditions'),
                   controlAffinity: ListTileControlAffinity.leading,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -443,7 +459,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text('Already have an account?'),
+                    Text(AppLocalizations.of(context)?.translate('already_have_account') ?? 'Already have an account?'),
                     TextButton(
                       onPressed: () {
                         Navigator.pop(context);

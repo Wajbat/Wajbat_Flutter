@@ -13,6 +13,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/request_provider.dart';
 import '../../providers/food_post_provider.dart';
 import '../../providers/user_provider.dart';
+import '../../core/localization/app_localizations.dart';
 
 class MyRequestsScreen extends StatefulWidget {
   const MyRequestsScreen({super.key});
@@ -43,7 +44,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> with SingleTickerPr
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Requests'),
+        title: Text(AppLocalizations.of(context)?.translate('my_requests_title') ?? 'My Requests'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -53,11 +54,11 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> with SingleTickerPr
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
-          tabs: const [
-            Tab(text: 'Pending'),
-            Tab(text: 'Accepted'),
-            Tab(text: 'Rejected'),
-            Tab(text: 'Completed'),
+          tabs: [
+            Tab(text: AppLocalizations.of(context)?.translate('pending') ?? 'Pending'),
+            Tab(text: AppLocalizations.of(context)?.translate('accepted') ?? 'Accepted'),
+            Tab(text: AppLocalizations.of(context)?.translate('rejected') ?? 'Rejected'),
+            Tab(text: AppLocalizations.of(context)?.translate('completed') ?? 'Completed'),
           ],
         ),
       ),
@@ -190,7 +191,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> with SingleTickerPr
       builder: (context, snapshot) {
         final post = snapshot.data;
         return Text(
-          post?.itemName ?? 'Loading...',
+          post?.itemName ?? AppLocalizations.of(context)?.translate('loading') ?? 'Loading...',
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         );
       },
@@ -213,7 +214,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> with SingleTickerPr
             ),
             const SizedBox(width: 4),
             Text(
-              donor?.name ?? 'Donor',
+              donor?.name ?? AppLocalizations.of(context)?.translate('donor') ?? 'Donor',
               style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
           ],
@@ -240,7 +241,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> with SingleTickerPr
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
-        status.toUpperCase(),
+        AppLocalizations.of(context)?.translateDynamic(status).toUpperCase() ?? status.toUpperCase(),
         style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 10),
       ),
     );
@@ -250,7 +251,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> with SingleTickerPr
     if (request.requestStatus == 'pending') {
       return TextButton(
         onPressed: () => _confirmCancel(request),
-        child: const Text('Cancel Request', style: TextStyle(color: Colors.red)),
+        child: Text(AppLocalizations.of(context)?.translate('cancel_request') ?? 'Cancel Request', style: const TextStyle(color: Colors.red)),
       );
     } else if (request.requestStatus == 'accepted') {
       return Row(
@@ -260,20 +261,20 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> with SingleTickerPr
             onPressed: () {
               // Navigate to Chat
             },
-            child: const Text('Contact'),
+            child: Text(AppLocalizations.of(context)?.translate('chat') ?? 'Contact'),
           ),
           const SizedBox(width: 8),
           ElevatedButton(
             onPressed: () => _confirmComplete(request),
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-            child: const Text('Complete', style: TextStyle(color: Colors.white)),
+            child: Text(AppLocalizations.of(context)?.translate('completed') ?? 'Complete', style: const TextStyle(color: Colors.white)),
           ),
         ],
       );
     } else if (request.requestStatus == 'completed') {
       return TextButton(
         onPressed: () {},
-        child: const Text('Leave Review'),
+        child: Text(AppLocalizations.of(context)?.translate('leave_review') ?? 'Leave Review'),
       );
     }
     return const SizedBox.shrink();
@@ -283,19 +284,19 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> with SingleTickerPr
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Cancel Request?'),
-        content: const Text('Are you sure you want to cancel this food request?'),
+        title: Text(AppLocalizations.of(context)?.translate('cancel_request') ?? 'Cancel Request?'),
+        content: Text(AppLocalizations.of(context)?.translate('are_you_sure_cancel_request') ?? 'Are you sure you want to cancel this food request?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('No')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppLocalizations.of(context)?.translate('no') ?? 'No')),
           TextButton(
             onPressed: () async {
               Navigator.pop(ctx);
               final success = await Provider.of<RequestProvider>(context, listen: false).cancelRequest(request.requestId);
               if (success && mounted) {
-                SnackbarHelper.showSuccess(context, 'Request cancelled');
+                SnackbarHelper.showSuccess(context, AppLocalizations.of(context)?.translate('request_cancelled') ?? 'Request cancelled');
               }
             },
-            child: const Text('Yes, Cancel', style: TextStyle(color: Colors.red)),
+            child: Text(AppLocalizations.of(context)?.translate('yes_cancel') ?? 'Yes, Cancel', style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -306,10 +307,10 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> with SingleTickerPr
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Mark as Completed?'),
-        content: const Text('Has the food been successfully picked up?'),
+        title: Text(AppLocalizations.of(context)?.translate('mark_as_completed_title') ?? 'Mark as Completed?'),
+        content: Text(AppLocalizations.of(context)?.translate('mark_as_completed_desc') ?? 'Has the food been successfully picked up?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppLocalizations.of(context)?.translate('cancel') ?? 'Cancel')),
           TextButton(
             onPressed: () async {
               Navigator.pop(ctx);
@@ -319,10 +320,10 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> with SingleTickerPr
               final success = await requestProvider.completeRequest(request.requestId);
               if (success) {
                 await foodProvider.updatePostStatus(request.postId, 'completed');
-                if (mounted) SnackbarHelper.showSuccess(context, 'Marked as completed!');
+                if (mounted) SnackbarHelper.showSuccess(context, AppLocalizations.of(context)?.translate('completed') ?? 'Marked as completed!');
               }
             },
-            child: const Text('Yes, Completed'),
+            child: Text(AppLocalizations.of(context)?.translate('yes_completed') ?? 'Yes, Completed'),
           ),
         ],
       ),
@@ -337,7 +338,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> with SingleTickerPr
           Icon(Icons.inbox_outlined, size: 60, color: Colors.grey[300]),
           const SizedBox(height: 16),
           Text(
-            'No $status requests found',
+            (AppLocalizations.of(context)?.translate('no_requests_found_status') ?? 'No {status} requests found').replaceAll('{status}', AppLocalizations.of(context)?.translateDynamic(status) ?? status),
             style: TextStyle(color: Colors.grey[500], fontSize: 16),
           ),
         ],

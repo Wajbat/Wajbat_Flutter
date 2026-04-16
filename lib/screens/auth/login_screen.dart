@@ -50,7 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
       } else if (mounted) {
         SnackbarHelper.showError(
           context, 
-          authProvider.errorMessage ?? 'Login failed'
+          authProvider.errorMessage ?? AppLocalizations.of(context)?.translate('login_failed') ?? 'Login failed'
         );
       }
     } catch (e) {
@@ -74,18 +74,18 @@ class _LoginScreenState extends State<LoginScreen> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        title: const Text('How would you like to continue?'),
+        title: Text(AppLocalizations.of(context)?.translate('how_continue') ?? 'How would you like to continue?'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
               leading: const Icon(Icons.volunteer_activism, color: Colors.green),
-              title: const Text('I want to Donate'),
+              title: Text(AppLocalizations.of(context)?.translate('i_want_to_donate') ?? 'I want to Donate'),
               onTap: () => Navigator.pop(ctx, 'donor'),
             ),
             ListTile(
               leading: const Icon(Icons.food_bank, color: Colors.orange),
-              title: const Text('I need Food'),
+              title: Text(AppLocalizations.of(context)?.translate('i_need_food') ?? 'I need Food'),
               onTap: () => Navigator.pop(ctx, 'recipient'),
             ),
           ],
@@ -99,7 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
         final authProvider = Provider.of<AuthProvider>(context, listen: false);
         final success = await authProvider.switchRole(role);
         if(!success && mounted) {
-             SnackbarHelper.showError(context, "Failed to switch role");
+             SnackbarHelper.showError(context, AppLocalizations.of(context)?.translate('failed_switch_role') ?? "Failed to switch role");
              return;
         }
       }

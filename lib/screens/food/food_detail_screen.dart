@@ -17,6 +17,7 @@ import '../../providers/food_post_provider.dart';
 import '../../providers/request_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../models/request_model.dart';
+import '../../core/localization/app_localizations.dart';
 
 class FoodDetailScreen extends StatefulWidget {
   const FoodDetailScreen({super.key});
@@ -51,10 +52,10 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
       );
 
       if (success && mounted) {
-        SnackbarHelper.showSuccess(context, 'Request sent successfully!');
+        SnackbarHelper.showSuccess(context, AppLocalizations.of(context)?.translate('request_sent_success') ?? 'Request sent successfully!');
       }
     } catch (e) {
-      if (mounted) SnackbarHelper.showError(context, 'Failed to send request: $e');
+      if (mounted) SnackbarHelper.showError(context, '${AppLocalizations.of(context)?.translate('request_send_failed') ?? 'Failed to send request: '}$e');
     } finally {
       if (mounted) setState(() => _isRequesting = false);
     }
@@ -65,21 +66,21 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
     return showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Request Food'),
+        title: Text(AppLocalizations.of(context)?.translate('request_food') ?? 'Request Food'),
         content: TextField(
           controller: controller,
           maxLines: 3,
-          decoration: const InputDecoration(
-            hintText: 'Add a message for the donor (optional)',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            hintText: AppLocalizations.of(context)?.translate('request_message_hint') ?? 'Add a message for the donor (optional)',
+            border: const OutlineInputBorder(),
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppLocalizations.of(context)?.translate('cancel') ?? 'Cancel')),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, controller.text.trim()),
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-            child: const Text('Send Request', style: TextStyle(color: Colors.white)),
+            child: Text(AppLocalizations.of(context)?.translate('send_request') ?? 'Send Request', style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -159,7 +160,9 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          isExpired ? 'Expired' : 'Available',
+                          isExpired 
+                              ? AppLocalizations.of(context)?.translate('expired') ?? 'Expired' 
+                              : AppLocalizations.of(context)?.translate('available') ?? 'Available',
                           style: TextStyle(
                             color: isExpired ? Colors.red : Colors.green,
                             fontWeight: FontWeight.bold,
@@ -187,7 +190,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                             child: userProvider.targetUser?.profileImageUrl == null ? const Icon(Icons.person) : null,
                           ),
                           title: Text(userProvider.targetUser?.name ?? 'Donor Name', style: const TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Text(userProvider.targetUser?.organizationName ?? 'Individual Donor'),
+                          subtitle: Text(userProvider.targetUser?.organizationName ?? AppLocalizations.of(context)?.translate('individual_donor') ?? 'Individual Donor'),
                           trailing: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -204,11 +207,13 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildDetailItem(Icons.shopping_basket_outlined, 'Quantity', post.quantity),
+                      _buildDetailItem(Icons.shopping_basket_outlined, AppLocalizations.of(context)?.translate('quantity') ?? 'Quantity', post.quantity),
                       _buildDetailItem(
                         Icons.timer_outlined, 
-                        'Expires', 
-                        isExpired ? 'Expired' : timeago.format(post.expirationDate, allowFromNow: true),
+                        AppLocalizations.of(context)?.translate('expires') ?? 'Expires', 
+                        isExpired 
+                            ? AppLocalizations.of(context)?.translate('expired') ?? 'Expired' 
+                            : timeago.format(post.expirationDate, allowFromNow: true),
                         color: isExpired ? Colors.red : Colors.black,
                       ),
                     ],
@@ -234,8 +239,8 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                             children: [
                               const Icon(Icons.warning_amber_rounded, color: Colors.red),
                               const SizedBox(width: 8),
-                              const Text(
-                                'Allergy Warning',
+                              Text(
+                                AppLocalizations.of(context)?.translate('allergy_warning') ?? 'Allergy Warning',
                                 style: TextStyle(
                                   color: Colors.red,
                                   fontWeight: FontWeight.bold,
@@ -246,7 +251,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Contains: ${authProvider.currentUser!.getAllergenIngredients(post.ingredients).join(", ")}',
+                            '${AppLocalizations.of(context)?.translate('contains_allergens') ?? 'Contains: '} ${authProvider.currentUser!.getAllergenIngredients(post.ingredients).join(", ")}',
                             style: TextStyle(
                               color: Colors.red[900],
                               fontWeight: FontWeight.w500,
@@ -263,7 +268,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                     children: [
                      const Icon(Icons.restaurant_menu, size: 20, color: Colors.grey),
                      const SizedBox(width: 8),
-                     const Text('Ingredients', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                     Text(AppLocalizations.of(context)?.translate('ingredients') ?? 'Ingredients', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -301,11 +306,11 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                       children: [
                         Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle)),
                         const SizedBox(width: 4),
-                        Text('Contains Allergen', style: TextStyle(fontSize: 10, color: Colors.grey[600])),
+                        Text(AppLocalizations.of(context)?.translate('contains_allergen') ?? 'Contains Allergen', style: TextStyle(fontSize: 10, color: Colors.grey[600])),
                         const SizedBox(width: 12),
                         Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle)),
                         const SizedBox(width: 4),
-                        Text('Safe Ingredient', style: TextStyle(fontSize: 10, color: Colors.grey[600])),
+                        Text(AppLocalizations.of(context)?.translate('safe_ingredient') ?? 'Safe Ingredient', style: TextStyle(fontSize: 10, color: Colors.grey[600])),
                       ],
                     ),
                   ],
@@ -313,7 +318,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                   const SizedBox(height: 24),
                   
                   // Location
-                  const Text('Location', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text(AppLocalizations.of(context)?.translate('location') ?? 'Location', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   Text(post.location, style: const TextStyle(color: Colors.black54)),
                   const SizedBox(height: 12),
@@ -332,7 +337,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                             Icon(Icons.map, size: 40, color: Colors.grey[400]),
                             const SizedBox(height: 8),
                             Text(
-                              'Map preview unavailable',
+                              AppLocalizations.of(context)?.translate('map_unavailable') ?? 'Map preview unavailable',
                               style: TextStyle(color: Colors.grey[600]),
                             ),
                             // Optional: Add a button to open in external maps
@@ -351,7 +356,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                                 }
                               }, 
                               icon: const Icon(Icons.open_in_new, size: 16),
-                              label: const Text('Open in Maps'),
+                              label: Text(AppLocalizations.of(context)?.translate('open_in_maps') ?? 'Open in Maps'),
                             )
                           ],
                         ),
@@ -378,7 +383,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                     child: OutlinedButton.icon(
                       onPressed: () => Navigator.pushNamed(context, AppRoutes.editPost, arguments: post),
                       icon: const Icon(Icons.edit),
-                      label: const Text('Edit'),
+                      label: Text(AppLocalizations.of(context)?.translate('edit') ?? 'Edit'),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -386,7 +391,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                     child: ElevatedButton.icon(
                       onPressed: () => _confirmDelete(context, post),
                       icon: const Icon(Icons.delete),
-                      label: const Text('Delete'),
+                      label: Text(AppLocalizations.of(context)?.translate('delete') ?? 'Delete'),
                       style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
                     ),
                   ),
@@ -398,7 +403,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                     child: _isRequesting
                         ? const LoadingIndicator()
                         : CustomButton(
-                            text: 'Request This Food',
+                            text: AppLocalizations.of(context)?.translate('request_this_food') ?? 'Request This Food',
                             onPressed: isExpired ? null : () => _handleRequest(post),
                             color: (authProvider.currentUser?.isRecipient == true && 
                                             authProvider.currentUser!.getAllergenIngredients(post.ingredients).isNotEmpty)
@@ -434,11 +439,11 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                         } else {
                           if (existingRequest == null) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Please request the food first to start a chat/negotiation.')),
+                              SnackBar(content: Text(AppLocalizations.of(context)?.translate('request_first') ?? 'Please request the food first to start a chat.')),
                             );
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Donor details not loaded yet.')),
+                              SnackBar(content: Text(AppLocalizations.of(context)?.translate('donor_not_loaded') ?? 'Donor details not loaded yet.')),
                             );
                           }
                         }
@@ -467,32 +472,32 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
           children: [
             const Icon(Icons.warning, color: Colors.red),
             const SizedBox(width: 8),
-            const Text('Allergy Warning', style: TextStyle(color: Colors.red)),
+            Text(AppLocalizations.of(context)?.translate('allergy_warning') ?? 'Allergy Warning', style: const TextStyle(color: Colors.red)),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('This food contains ingredients you are allergic to:'),
+            Text(AppLocalizations.of(context)?.translate('allergy_warning_desc') ?? 'This food contains ingredients you are allergic to:'),
             const SizedBox(height: 8),
             Text(
               allergens.join(", "),
               style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
             ),
             const SizedBox(height: 16),
-            const Text('Are you sure you want to proceed nicely? consuming this could be dangerous.'),
+            Text(AppLocalizations.of(context)?.translate('allergy_proceed_confirm') ?? 'Are you sure you want to proceed? Consuming this could be dangerous.'),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)?.translate('cancel') ?? 'Cancel'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Request Anyway (I understand the risk)', style: TextStyle(color: Colors.white, fontSize: 12)),
+            child: Text(AppLocalizations.of(context)?.translate('request_anyway') ?? 'Request Anyway', style: const TextStyle(color: Colors.white, fontSize: 12)),
           ),
         ],
       ),
@@ -529,20 +534,20 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Post?'),
-        content: const Text('Are you sure you want to remove this food contribution? This action cannot be undone.'),
+        title: Text(AppLocalizations.of(context)?.translate('delete_post_title') ?? 'Delete Post?'),
+        content: Text(AppLocalizations.of(context)?.translate('delete_post_confirm') ?? 'Are you sure you want to remove this food contribution?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppLocalizations.of(context)?.translate('cancel') ?? 'Cancel')),
           TextButton(
             onPressed: () async {
               Navigator.pop(ctx);
               final success = await Provider.of<FoodPostProvider>(context, listen: false).deletePost(post.postId);
               if (success && mounted) {
                 Navigator.pop(context);
-                SnackbarHelper.showSuccess(context, 'Post deleted');
+                SnackbarHelper.showSuccess(context, AppLocalizations.of(context)?.translate('post_deleted_success') ?? 'Post deleted');
               }
             },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: Text(AppLocalizations.of(context)?.translate('delete') ?? 'Delete', style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),

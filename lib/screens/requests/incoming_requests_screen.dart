@@ -15,6 +15,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/request_provider.dart';
 import '../../providers/food_post_provider.dart';
 import '../../providers/user_provider.dart';
+import '../../core/localization/app_localizations.dart';
 
 class IncomingRequestsScreen extends StatefulWidget {
   const IncomingRequestsScreen({super.key});
@@ -45,7 +46,7 @@ class _IncomingRequestsScreenState extends State<IncomingRequestsScreen> with Si
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Incoming Requests'),
+        title: Text(AppLocalizations.of(context)?.translate('incoming_requests_title') ?? 'Incoming Requests'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -55,11 +56,11 @@ class _IncomingRequestsScreenState extends State<IncomingRequestsScreen> with Si
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
-          tabs: const [
-            Tab(text: 'Pending'),
-            Tab(text: 'Accepted'),
-            Tab(text: 'Rejected'),
-            Tab(text: 'Completed'),
+          tabs: [
+            Tab(text: AppLocalizations.of(context)?.translate('pending') ?? 'Pending'),
+            Tab(text: AppLocalizations.of(context)?.translate('accepted') ?? 'Accepted'),
+            Tab(text: AppLocalizations.of(context)?.translate('rejected') ?? 'Rejected'),
+            Tab(text: AppLocalizations.of(context)?.translate('completed') ?? 'Completed'),
           ],
         ),
       ),
@@ -137,7 +138,7 @@ class _IncomingRequestsScreenState extends State<IncomingRequestsScreen> with Si
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Message:', style: TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
+                    Text(AppLocalizations.of(context)?.translate('message_label') ?? 'Message:', style: const TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 4),
                     Text(
                       request.message!,
@@ -185,7 +186,7 @@ class _IncomingRequestsScreenState extends State<IncomingRequestsScreen> with Si
       future: Provider.of<UserProvider>(context, listen: false).getUser(recipientId),
       builder: (context, snapshot) {
         return Text(
-          snapshot.data?.name ?? 'Loading...',
+          snapshot.data?.name ?? AppLocalizations.of(context)?.translate('loading') ?? 'Loading...',
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         );
       },
@@ -198,7 +199,7 @@ class _IncomingRequestsScreenState extends State<IncomingRequestsScreen> with Si
       builder: (context, snapshot) {
         final post = snapshot.data;
         return Text(
-          'For: ${post?.itemName ?? '...'}',
+          '${AppLocalizations.of(context)?.translate('for_item') ?? 'For: '}${post?.itemName ?? '...'}',
           style: const TextStyle(fontSize: 12, color: Colors.black54),
         );
       },
@@ -222,7 +223,7 @@ class _IncomingRequestsScreenState extends State<IncomingRequestsScreen> with Si
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
-        status.toUpperCase(),
+        AppLocalizations.of(context)?.translateDynamic(status).toUpperCase() ?? status.toUpperCase(),
         style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 10),
       ),
     );
@@ -235,13 +236,13 @@ class _IncomingRequestsScreenState extends State<IncomingRequestsScreen> with Si
         children: [
           TextButton(
             onPressed: () => _handleStatusChange(request, 'rejected'),
-            child: const Text('Reject', style: TextStyle(color: Colors.red)),
+            child: Text(AppLocalizations.of(context)?.translate('reject') ?? 'Reject', style: const TextStyle(color: Colors.red)),
           ),
           const SizedBox(width: 8),
           ElevatedButton(
             onPressed: () => _handleAccept(request),
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-            child: const Text('Accept', style: TextStyle(color: Colors.white)),
+            child: Text(AppLocalizations.of(context)?.translate('accept') ?? 'Accept', style: const TextStyle(color: Colors.white)),
           ),
         ],
       );
@@ -259,7 +260,7 @@ class _IncomingRequestsScreenState extends State<IncomingRequestsScreen> with Si
           ElevatedButton(
             onPressed: () => _handleStatusChange(request, 'completed'),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-            child: const Text('Mark Completed', style: TextStyle(color: Colors.white)),
+            child: Text(AppLocalizations.of(context)?.translate('mark_completed') ?? 'Mark Completed', style: const TextStyle(color: Colors.white)),
           ),
         ],
       );
@@ -271,11 +272,11 @@ class _IncomingRequestsScreenState extends State<IncomingRequestsScreen> with Si
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Accept Request?'),
-        content: const Text('This will reserve the food for this recipient.'),
+        title: Text(AppLocalizations.of(context)?.translate('accept_request_title') ?? 'Accept Request?'),
+        content: Text(AppLocalizations.of(context)?.translate('accept_request_desc') ?? 'This will reserve the food for this recipient.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Accept')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(AppLocalizations.of(context)?.translate('cancel') ?? 'Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(AppLocalizations.of(context)?.translate('accept') ?? 'Accept')),
         ],
       ),
     );
@@ -296,11 +297,11 @@ class _IncomingRequestsScreenState extends State<IncomingRequestsScreen> with Si
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('${status[0].toUpperCase()}${status.substring(1)} Request?'),
-        content: Text('Are you sure you want to mark this request as $status?'),
+        title: Text('${AppLocalizations.of(context)?.translateDynamic(status) ?? status} ${AppLocalizations.of(context)?.translate('requests') ?? 'Request'}?'),
+        content: Text(AppLocalizations.of(context)?.translate('reject_request_desc') ?? 'Are you sure you want to mark this request as rejected?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Confirm')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(AppLocalizations.of(context)?.translate('cancel') ?? 'Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(AppLocalizations.of(context)?.translate('confirm') ?? 'Confirm')),
         ],
       ),
     );
@@ -328,7 +329,7 @@ class _IncomingRequestsScreenState extends State<IncomingRequestsScreen> with Si
       }
 
       if (success && mounted && status != 'completed') {
-        SnackbarHelper.showSuccess(context, 'Request updated to $status');
+        SnackbarHelper.showSuccess(context, '${AppLocalizations.of(context)?.translate('request_updated') ?? 'Request updated to '}${AppLocalizations.of(context)?.translateDynamic(status) ?? status}');
       }
     }
   }
@@ -341,7 +342,7 @@ class _IncomingRequestsScreenState extends State<IncomingRequestsScreen> with Si
           Icon(Icons.inbox_outlined, size: 60, color: Colors.grey[300]),
           const SizedBox(height: 16),
           Text(
-            'No $status incoming requests',
+            (AppLocalizations.of(context)?.translate('no_incoming_requests_status') ?? 'No {status} incoming requests').replaceAll('{status}', AppLocalizations.of(context)?.translateDynamic(status) ?? status),
             style: TextStyle(color: Colors.grey[500], fontSize: 16),
           ),
         ],

@@ -222,7 +222,9 @@ class _DonorHomeScreenState extends State<DonorHomeScreen> {
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
-                                (post.isExpired && post.postStatus == 'available' ? 'EXPIRED' : post.postStatus).toUpperCase(),
+                                (post.isExpired && post.postStatus == 'available' 
+                                    ? AppLocalizations.of(context)?.translate('expired') ?? 'EXPIRED' 
+                                    : AppLocalizations.of(context)?.translateDynamic(post.postStatus) ?? post.postStatus).toUpperCase(),
                                 style: TextStyle(
                                   fontSize: 8, 
                                   color: post.isExpired && post.postStatus == 'available' ? Colors.red : _getStatusColor(post.postStatus), 
@@ -267,7 +269,7 @@ class _DonorHomeScreenState extends State<DonorHomeScreen> {
           child: ListTile(
             leading: CircleAvatar(backgroundColor: AppColors.secondary.withOpacity(0.2), child: const Icon(Icons.person, color: AppColors.secondary)),
             title: Text('${AppLocalizations.of(context)?.translate('request_for') ?? 'Request for '} ${req.postId.substring(0, 8)}...', style: const TextStyle(fontWeight: FontWeight.bold)), // In real app, fetch post title
-            subtitle: Text('${AppLocalizations.of(context)?.translate('status') ?? 'Status: '}${req.requestStatus}'),
+            subtitle: Text('${AppLocalizations.of(context)?.translate('status') ?? 'Status: '}${AppLocalizations.of(context)?.translateDynamic(req.requestStatus) ?? req.requestStatus}'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {},
           ),

@@ -12,6 +12,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/message_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/config/supabase_config.dart';
+import '../../core/localization/app_localizations.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -106,7 +107,7 @@ class _ChatScreenState extends State<ChatScreen> {
         if (!isAutoRefresh) {
           setState(() => _isLoading = false);
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to load messages: $e')),
+            SnackBar(content: Text('${AppLocalizations.of(context)?.translate('failed_load_messages') ?? 'Failed to load messages: '}$e')),
           );
         }
       }
@@ -149,7 +150,7 @@ class _ChatScreenState extends State<ChatScreen> {
     ).subscribe((status, error) {
       if (status == RealtimeSubscribeStatus.channelError && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Real-time connection lost. Use refresh if needed.')),
+          SnackBar(content: Text(AppLocalizations.of(context)?.translate('connection_lost') ?? 'Real-time connection lost. Use refresh if needed.')),
         );
       }
     });
@@ -214,7 +215,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to send: $e')),
+        SnackBar(content: Text('${AppLocalizations.of(context)?.translate('failed_send_message') ?? 'Failed to send: '}$e')),
       );
     } finally {
       if (mounted) setState(() => _isSending = false);
@@ -270,7 +271,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Request Status: ${_request.requestStatus.toUpperCase()}',
+                    '${AppLocalizations.of(context)?.translate('request_status') ?? 'Request Status: '}${AppLocalizations.of(context)?.translateDynamic(_request.requestStatus).toUpperCase() ?? _request.requestStatus.toUpperCase()}',
                     style: TextStyle(fontSize: 12, color: Colors.grey[800], fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -288,7 +289,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 children: [
                   Icon(Icons.chat_bubble_outline, size: 48, color: Colors.grey[300]),
                   const SizedBox(height: 16),
-                  const Text('Start the conversation!', style: TextStyle(color: Colors.grey)),
+                  Text(AppLocalizations.of(context)?.translate('start_conversation') ?? 'Start the conversation!', style: const TextStyle(color: Colors.grey)),
                 ],
               ),
             )
@@ -308,7 +309,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         child: Text(
-                          DateFormat('MMM dd, yyyy').format(msg.createdAt),
+                          DateFormat.yMMMd(Localizations.localeOf(context).toString()).format(msg.createdAt),
                           style: const TextStyle(color: Colors.grey, fontSize: 12),
                         ),
                       ),
@@ -341,7 +342,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     child: TextField(
                       controller: _messageController,
                       decoration: InputDecoration(
-                        hintText: 'Type a message...',
+                        hintText: AppLocalizations.of(context)?.translate('type_a_message') ?? 'Type a message...',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),
                           borderSide: BorderSide.none,

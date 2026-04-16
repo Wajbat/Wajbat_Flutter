@@ -32,7 +32,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     await authProvider.refreshUser();
     
     if (mounted) {
-      SnackbarHelper.showSuccess(context, 'Profile refreshed');
+      SnackbarHelper.showSuccess(context, AppLocalizations.of(context)?.translate('profile_refreshed') ?? 'Profile refreshed');
     }
   }
 
@@ -59,7 +59,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Profile'),
+        title: Text(AppLocalizations.of(context)?.translate('my_profile') ?? 'My Profile'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -123,7 +123,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: user.roles
                         .map((role) => Chip(
                               label: Text(
-                                role.toUpperCase(),
+                                AppLocalizations.of(context)?.translateDynamic(role).toUpperCase() ?? role.toUpperCase(),
                                 style: const TextStyle(fontSize: 10, color: AppColors.primary),
                               ),
                               backgroundColor: Colors.white,
@@ -147,7 +147,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const Icon(Icons.star, color: Colors.amber, size: 20),
                           const SizedBox(width: 8),
                           Text(
-                            '${user.donationPoints} Points',
+                            '${user.donationPoints} ${AppLocalizations.of(context)?.translate('points') ?? 'Points'}',
                             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                           ),
                         ],
@@ -181,9 +181,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text('Currently:', style: TextStyle(color: Colors.grey)),
+                                  Text(AppLocalizations.of(context)?.translate('currently') ?? 'Currently:', style: const TextStyle(color: Colors.grey)),
                                   Text(
-                                    user.active_role.toUpperCase(),
+                                    AppLocalizations.of(context)?.translateDynamic(user.active_role).toUpperCase() ?? user.active_role.toUpperCase(),
                                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                                   ),
                                 ],
@@ -196,7 +196,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 final newRole = value ? 'donor' : 'recipient';
                                 final success = await authProvider.switchRole(newRole);
                                 if (success && context.mounted) {
-                                  SnackbarHelper.showSuccess(context, '${AppLocalizations.of(context)!.translate('switch_role')} ${newRole.toUpperCase()}');
+                                  SnackbarHelper.showSuccess(context, '${AppLocalizations.of(context)!.translate('switch_role')} ${AppLocalizations.of(context)!.translateDynamic(newRole).toUpperCase()}');
                                   Navigator.pushReplacementNamed(
                                     context,
                                     newRole == 'donor' ? AppRoutes.donorHome : AppRoutes.recipientHome,
@@ -277,7 +277,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             const SizedBox(width: 12),
                             Expanded(child: _buildStatCard(AppLocalizations.of(context)!.translate('active_posts'), '$activePosts', Icons.inventory_2)),
                             const SizedBox(width: 12),
-                            Expanded(child: _buildStatCard(AppLocalizations.of(context)!.translate('impact_score'), 'High', Icons.favorite)),
+                            Expanded(child: _buildStatCard(AppLocalizations.of(context)!.translate('impact_score'), AppLocalizations.of(context)!.translate('impact_high'), Icons.favorite)),
                           ],
                         );
                       },
@@ -483,12 +483,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'This action is irreversible. All your data will be permanently removed.',
-              style: TextStyle(fontSize: 13),
+            Text(
+              AppLocalizations.of(context)?.translate('delete_account_confirm_msg') ?? 'This action is irreversible. All your data will be permanently removed.',
+              style: const TextStyle(fontSize: 13),
             ),
             const SizedBox(height: 16),
-            const Text('Please enter your password to confirm:'),
+            Text(AppLocalizations.of(context)?.translate('enter_password_confirm') ?? 'Please enter your password to confirm:'),
             const SizedBox(height: 8),
             // In a real app, we should verify password. 
             // For now, assume re-authentication or just a confirmation.
@@ -513,7 +513,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPressed: () async {
               // TODO: Verify password with backend
               if (passwordController.text.isEmpty) {
-                SnackbarHelper.showError(context, 'Password is required');
+                SnackbarHelper.showError(context, AppLocalizations.of(context)?.translate('password_required') ?? 'Password is required');
                 return;
               }
               
@@ -524,11 +524,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 await userProvider.deleteAccount(userId);
                 if (context.mounted) {
                   Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
-                  SnackbarHelper.showSuccess(context, 'Account deleted successfully');
+                  SnackbarHelper.showSuccess(context, AppLocalizations.of(context)?.translate('account_deleted_success') ?? 'Account deleted successfully');
                 }
               } catch (e) {
                 if (context.mounted) {
-                  SnackbarHelper.showError(context, 'Failed to delete account: $e');
+                  SnackbarHelper.showError(context, '${AppLocalizations.of(context)?.translate('account_delete_failed') ?? 'Failed to delete account: '}$e');
                 }
               }
             },

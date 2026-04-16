@@ -6,6 +6,7 @@ import '../../core/widgets/custom_button.dart';
 import '../../core/widgets/custom_text_field.dart';
 import '../../core/widgets/loading_indicator.dart';
 import '../../providers/auth_provider.dart';
+import '../../core/localization/app_localizations.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -35,7 +36,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       if (mounted) {
         SnackbarHelper.showSuccess(
           context, 
-          'Password reset link sent! Check your email.'
+          AppLocalizations.of(context)?.translate('password_reset_sent') ?? 'Password reset link sent! Check your email.'
         );
         Navigator.pop(context); // Go back to login
       }
@@ -49,7 +50,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final authProvider = Provider.of<AuthProvider>(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Reset Password')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)?.translate('reset_password') ?? 'Reset Password')),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Form(
@@ -57,15 +58,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
-                'Enter your email address and we will send you a link to reset your password.',
-                style: TextStyle(fontSize: 16),
+            Text(
+                AppLocalizations.of(context)?.translate('reset_password_desc') ?? 'Enter your email address and we will send you a link to reset your password.',
+                style: const TextStyle(fontSize: 16),
               ),
               const SizedBox(height: 24),
               CustomTextField(
                 controller: _emailController,
-                label: 'Email',
-                hint: 'Enter your email',
+                label: AppLocalizations.of(context)?.translate('email') ?? 'Email',
+                hint: AppLocalizations.of(context)?.translate('email') ?? 'Enter your email',
                 keyboardType: TextInputType.emailAddress,
                 prefixIcon: Icons.email_outlined,
                 validator: Validators.validateEmail,
@@ -74,7 +75,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               authProvider.isLoading
                   ? const LoadingIndicator()
                   : CustomButton(
-                      text: 'Send Reset Link',
+                      text: AppLocalizations.of(context)?.translate('send_reset_link') ?? 'Send Reset Link',
                       onPressed: _handleReset,
                     ),
             ],

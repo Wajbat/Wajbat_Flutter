@@ -335,9 +335,12 @@ class _RecipientHomeScreenState extends State<RecipientHomeScreen> {
               const SizedBox(height: 20),
               Text(AppLocalizations.of(context)?.translate('distance_radius') ?? 'Distance Radius', style: const TextStyle(fontWeight: FontWeight.bold)),
               Slider(value: 5, min: 1, max: 20, onChanged: (v) {}),
-              const Row(
+              Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [Text('1km'), Text('20km')],
+                children: [
+                  Text('1${AppLocalizations.of(context)?.translate('km') ?? 'km'}'), 
+                  Text('20${AppLocalizations.of(context)?.translate('km') ?? 'km'}')
+                ],
               ),
               const SizedBox(height: 20),
               Text(AppLocalizations.of(context)?.translate('sort_by') ?? 'Sort By', style: const TextStyle(fontWeight: FontWeight.bold)),
