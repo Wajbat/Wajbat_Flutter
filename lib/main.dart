@@ -28,6 +28,9 @@ import 'screens/support/support_ticket_screen.dart';
 import 'screens/support/chatbot_screen.dart';
 import 'screens/rewards/leaderboard_screen.dart';
 import 'screens/chat/chat_screen.dart';
+import 'screens/auth/reset_password_screen.dart';
+import 'core/utils/navigator_key.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,8 +45,26 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    
+    // Listen for auth state changes to catch password recovery deep link
+    SupabaseConfig.auth.onAuthStateChange.listen((data) {
+      final AuthChangeEvent event = data.event;
+      if (event == AuthChangeEvent.passwordRecovery) {
+        AppNavigator.navigatorKey.currentState?.pushNamed(AppRoutes.resetPassword);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,6 +81,7 @@ class MyApp extends StatelessWidget {
         builder: (context, languageProvider, child) {
           return MaterialApp(
             title: 'Wajbat',
+            navigatorKey: AppNavigator.navigatorKey,
             debugShowCheckedModeBanner: false,
             // Localization
             locale: languageProvider.currentLocale,
@@ -91,6 +113,7 @@ class MyApp extends StatelessWidget {
               AppRoutes.login: (context) => const LoginScreen(),
               AppRoutes.register: (context) => const RegisterScreen(),
               AppRoutes.forgotPassword: (context) => const ForgotPasswordScreen(),
+              AppRoutes.resetPassword: (context) => const ResetPasswordScreen(),
               AppRoutes.home: (context) => const HomeScreen(),
               // Role-based home routes also point to HomeScreen which handles internal switching
               AppRoutes.donorHome: (context) => const HomeScreen(),

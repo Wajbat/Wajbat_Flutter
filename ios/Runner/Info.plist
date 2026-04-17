@@ -66,5 +66,14 @@
         <string>googlechromes</string>
         <string>comgooglemaps</string>
     </array>
+    <key>CFBundleURLTypes</key>
+    <array>
+      <dict>
+        <key>CFBundleURLSchemes</key>
+        <array>
+          <string>wajbat</string>
+        </array>
+      </dict>
+    </array>
 </dict>
 </plist>

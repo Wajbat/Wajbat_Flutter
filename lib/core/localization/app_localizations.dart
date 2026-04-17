@@ -210,6 +210,11 @@ class AppLocalizations {
       'reset_password_desc': 'Enter your email address and we will send you a link to reset your password.',
       'send_reset_link': 'Send Reset Link',
       'password_reset_sent': 'Password reset link sent! Check your email.',
+      'reset_password_instruction': 'Please enter your new password below.',
+      'new_password': 'New Password',
+      'password_too_short': 'Password must be at least 8 characters long',
+      'password_updated_success': 'Password updated successfully!',
+      'error_reset_password': 'Failed to reset password. Please try again.',
     },
     'ar': {
       'app_name': 'وجبات',
@@ -404,6 +409,11 @@ class AppLocalizations {
       'reset_password_desc': 'أدخل عنوان بريدك الإلكتروني وسنرسل لك رابطاً لإعادة تعيين كلمة المرور الخاصة بك.',
       'send_reset_link': 'إرسال رابط الإعادة',
       'password_reset_sent': 'تم إرسال رابط إعادة تعيين كلمة المرور! تحقق من بريدك الإلكتروني.',
+      'reset_password_instruction': 'يرجى إدخال كلمة المرور الجديدة أدناه.',
+      'new_password': 'كلمة المرور الجديدة',
+      'password_too_short': 'يجب أن تتكون كلمة المرور من 8 أحرف على الأقل',
+      'password_updated_success': 'تم تحديث كلمة المرور بنجاح!',
+      'error_reset_password': 'فشل إعادة تعيين كلمة المرور. يرجى المحاولة مرة أخرى.',
     },
   };
 

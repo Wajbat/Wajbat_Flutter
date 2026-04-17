@@ -19,4 +19,5 @@ class AppRoutes {
   static const String chatbot = '/chatbot';
   static const String supportTicket = '/support-ticket';
   static const String myDonations = '/my-donations';
+  static const String resetPassword = '/reset-password';
 }

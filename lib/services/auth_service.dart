@@ -235,7 +235,12 @@ class AuthService {
   // Reset Password
   Future<void> resetPassword({required String email}) async {
     try {
-      await _client.auth.resetPasswordForEmail(email);
+      await _client.auth.resetPasswordForEmail(
+        email,
+        redirectTo: 'wajbat://reset-password',
+      );
+    } on AuthException catch (e) {
+      throw Exception(e.message);
     } catch (e) {
       throw Exception('Reset password error: $e');
     }
