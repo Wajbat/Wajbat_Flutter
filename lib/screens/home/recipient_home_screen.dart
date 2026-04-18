@@ -8,6 +8,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
 import '../../models/food_post_model.dart';
 import '../../core/localization/app_localizations.dart';
+import '../../core/widgets/notification_dialog.dart';
 
 class RecipientHomeScreen extends StatefulWidget {
   const RecipientHomeScreen({super.key});
@@ -90,9 +91,9 @@ class _RecipientHomeScreenState extends State<RecipientHomeScreen> {
                         ),
                       ],
                     ),
-                    CircleAvatar(
-                      backgroundColor: AppColors.primary.withOpacity(0.1),
-                      child: const Icon(Icons.location_on, color: AppColors.primary),
+                    IconButton(
+                      onPressed: () => NotificationDialog.show(context),
+                      icon: const Icon(Icons.notifications_none, color: AppColors.primary),
                     ),
                   ],
                 ),

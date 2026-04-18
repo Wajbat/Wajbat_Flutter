@@ -9,6 +9,9 @@ import 'package:geocoding/geocoding.dart';
 import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart' as picker;
 import 'package:intl/intl.dart';
 
+import '../../core/widgets/sample_image_picker.dart';
+import '../../services/image_service.dart';
+
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
 import '../../core/utils/validators.dart';
@@ -62,65 +65,153 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     try {
       final XFile? pickedFile = await _picker.pickImage(source: source);
       if (pickedFile != null && mounted) {
-        // Small delay to ensure the OS has finished with the picker activity
-        await Future.delayed(const Duration(milliseconds: 300));
-        
-        final croppedFile = await ImageCropper().cropImage(
-          sourcePath: pickedFile.path,
-          uiSettings: [
-            AndroidUiSettings(
-              toolbarTitle: 'Crop Image',
-              toolbarColor: AppColors.primary,
-              statusBarColor: AppColors.primary,
-              toolbarWidgetColor: Colors.white,
-              initAspectRatio: CropAspectRatioPreset.original,
-              lockAspectRatio: false,
-              aspectRatioPresets: [
-                CropAspectRatioPreset.square,
-                CropAspectRatioPreset.ratio3x2,
-                CropAspectRatioPreset.original,
-                CropAspectRatioPreset.ratio4x3,
-                CropAspectRatioPreset.ratio16x9
-              ],
-            ),
-            IOSUiSettings(
-              title: 'Crop Image',
-              aspectRatioLockEnabled: false,
-              resetAspectRatioEnabled: true,
-              aspectRatioPresets: [
-                CropAspectRatioPreset.square,
-                CropAspectRatioPreset.ratio3x2,
-                CropAspectRatioPreset.original,
-                CropAspectRatioPreset.ratio4x3,
-                CropAspectRatioPreset.ratio16x9
-              ],
-            ),
-            WebUiSettings(
-              context: context,
-              presentStyle: WebPresentStyle.page,
-            ),
-          ],
-        );
-
-        if (croppedFile != null && mounted) {
-          setState(() {
-            if (kIsWeb) {
-              _image = croppedFile;
-            } else {
-              _image = File(croppedFile.path);
-            }
-          });
-        }
+        await _cropImage(pickedFile.path);
       }
     } catch (e) {
       if (mounted) {
-        SnackbarHelper.showError(context, 'Error selecting/cropping image: $e');
+        SnackbarHelper.showError(context, 'Error selecting image: $e');
       }
     } finally {
       if (mounted) {
         setState(() => _isPickingImage = false);
       }
     }
+  }
+
+  Future<void> _pickSampleImage() async {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SampleImagePicker(
+        onSelected: (assetPath) async {
+          if (_isPickingImage) return;
+          setState(() => _isPickingImage = true);
+          try {
+            final String path = await ImageService.getSampleImagePath(assetPath);
+            if (mounted) {
+              await _cropImage(path);
+            }
+          } catch (e) {
+            if (mounted) {
+              SnackbarHelper.showError(context, 'Error loading sample image: $e');
+            }
+          } finally {
+            if (mounted) {
+              setState(() => _isPickingImage = false);
+            }
+          }
+        },
+      ),
+    );
+  }
+
+  Future<void> _cropImage(String sourcePath) async {
+    try {
+      // Small delay to ensure the OS has finished with any previous picker/bottom sheet activity
+      await Future.delayed(const Duration(milliseconds: 300));
+      
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: sourcePath,
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Crop Image',
+            toolbarColor: AppColors.primary,
+            statusBarColor: AppColors.primary,
+            toolbarWidgetColor: Colors.white,
+            initAspectRatio: CropAspectRatioPreset.original,
+            lockAspectRatio: false,
+            aspectRatioPresets: [
+              CropAspectRatioPreset.square,
+              CropAspectRatioPreset.ratio3x2,
+              CropAspectRatioPreset.original,
+              CropAspectRatioPreset.ratio4x3,
+              CropAspectRatioPreset.ratio16x9
+            ],
+          ),
+          IOSUiSettings(
+            title: 'Crop Image',
+            aspectRatioLockEnabled: false,
+            resetAspectRatioEnabled: true,
+            aspectRatioPresets: [
+              CropAspectRatioPreset.square,
+              CropAspectRatioPreset.ratio3x2,
+              CropAspectRatioPreset.original,
+              CropAspectRatioPreset.ratio4x3,
+              CropAspectRatioPreset.ratio16x9
+            ],
+          ),
+          WebUiSettings(
+            context: context,
+            presentStyle: WebPresentStyle.page,
+          ),
+        ],
+      );
+
+      if (croppedFile != null && mounted) {
+        setState(() {
+          if (kIsWeb) {
+            _image = croppedFile;
+          } else {
+            _image = File(croppedFile.path);
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        SnackbarHelper.showError(context, 'Error cropping image: $e');
+      }
+    }
+  }
+
+  void _showImageSourceOptions() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text(
+                'Select Image Source',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt, color: AppColors.primary),
+              title: const Text('Camera'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library, color: AppColors.primary),
+              title: const Text('Gallery'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.gallery);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.collections, color: AppColors.primary),
+              title: const Text('Sample Photos'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickSampleImage();
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _analyzeIngredients() async {
@@ -249,7 +340,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             children: [
               // Image Section
               GestureDetector(
-                onTap: () => _pickImage(ImageSource.gallery),
+                onTap: _showImageSourceOptions,
                 child: Container(
                   height: 200,
                   decoration: BoxDecoration(
@@ -279,7 +370,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 children: [
                    Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () => _pickImage(ImageSource.camera),
+                      onPressed: _showImageSourceOptions,
                       icon: const Icon(Icons.camera_alt),
                       label: const Text('Camera'),
                     ),
@@ -287,7 +378,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () => _pickImage(ImageSource.gallery),
+                      onPressed: _showImageSourceOptions,
                       icon: const Icon(Icons.photo_library),
                       label: const Text('Gallery'),
                     ),

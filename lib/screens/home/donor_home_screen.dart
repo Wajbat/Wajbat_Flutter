@@ -9,6 +9,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
 import '../../models/food_post_model.dart';
 import '../../core/localization/app_localizations.dart';
+import '../../core/widgets/notification_dialog.dart';
 
 class DonorHomeScreen extends StatefulWidget {
   const DonorHomeScreen({super.key});
@@ -74,7 +75,7 @@ class _DonorHomeScreenState extends State<DonorHomeScreen> {
               actions: [
                 IconButton(
                   icon: const Icon(Icons.notifications_none, color: Colors.white),
-                  onPressed: () {},
+                  onPressed: () => NotificationDialog.show(context),
                 ),
               ],
             ),

@@ -215,6 +215,9 @@ class AppLocalizations {
       'password_too_short': 'Password must be at least 8 characters long',
       'password_updated_success': 'Password updated successfully!',
       'error_reset_password': 'Failed to reset password. Please try again.',
+      'no_notifications': 'No Notifications',
+      'no_notifications_msg': 'There is no notification right now.',
+      'ok': 'Ok',
     },
     'ar': {
       'app_name': 'وجبات',
@@ -414,6 +417,9 @@ class AppLocalizations {
       'password_too_short': 'يجب أن تتكون كلمة المرور من 8 أحرف على الأقل',
       'password_updated_success': 'تم تحديث كلمة المرور بنجاح!',
       'error_reset_password': 'فشل إعادة تعيين كلمة المرور. يرجى المحاولة مرة أخرى.',
+      'no_notifications': 'لا توجد إشعارات',
+      'no_notifications_msg': 'لا توجد إشعارات في الوقت الحالي.',
+      'ok': 'حسناً',
     },
   };
 
