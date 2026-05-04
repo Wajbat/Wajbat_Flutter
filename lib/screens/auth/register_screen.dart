@@ -137,6 +137,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
+              const SizedBox(height: 8),
+              const Text(
+                'verified via smtp.gmail.com',
+                style: TextStyle(
+                  color: Colors.green,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 14,
+                ),
+              ),
               const SizedBox(height: 16),
               Text(
                 'This email has been verified against the ID:',
