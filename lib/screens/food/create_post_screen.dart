@@ -6,11 +6,12 @@ import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
-import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart' as picker;
+import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart'
+    as picker;
 import 'package:intl/intl.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 
-import '../../core/widgets/sample_image_picker.dart';
-import '../../services/image_service.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
@@ -36,7 +37,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   final _quantityController = TextEditingController();
   final _locationController = TextEditingController();
   final _ingredientController = TextEditingController();
-  
+
   dynamic _image; // Use dynamic to support File (mobile) and CroppedFile (web)
   DateTime? _expirationDate;
   double? _latitude;
@@ -48,6 +49,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   final ImagePicker _picker = ImagePicker();
   final AIService _aiService = AIService();
+  final MapController _mapController = MapController();
+  LatLng _currentLatLng = const LatLng(
+      25.2048, 55.2708); // Default to Dubai since app name is Arabic
+  String _address = '';
 
   @override
   void dispose() {
@@ -78,42 +83,12 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     }
   }
 
-  Future<void> _pickSampleImage() async {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => SampleImagePicker(
-        onSelected: (assetPath) async {
-          if (_isPickingImage) return;
-          setState(() => _isPickingImage = true);
-          try {
-            final String path = await ImageService.getSampleImagePath(assetPath);
-            if (mounted) {
-              await _cropImage(path);
-            }
-          } catch (e) {
-            if (mounted) {
-              SnackbarHelper.showError(context, 'Error loading sample image: $e');
-            }
-          } finally {
-            if (mounted) {
-              setState(() => _isPickingImage = false);
-            }
-          }
-        },
-      ),
-    );
-  }
 
   Future<void> _cropImage(String sourcePath) async {
     try {
       // Small delay to ensure the OS has finished with any previous picker/bottom sheet activity
       await Future.delayed(const Duration(milliseconds: 300));
-      
+
       final croppedFile = await ImageCropper().cropImage(
         sourcePath: sourcePath,
         uiSettings: [
@@ -192,21 +167,15 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.photo_library, color: AppColors.primary),
+              leading:
+                  const Icon(Icons.photo_library, color: AppColors.primary),
               title: const Text('Gallery'),
               onTap: () {
                 Navigator.pop(context);
                 _pickImage(ImageSource.gallery);
               },
             ),
-            ListTile(
-              leading: const Icon(Icons.collections, color: AppColors.primary),
-              title: const Text('Sample Photos'),
-              onTap: () {
-                Navigator.pop(context);
-                _pickSampleImage();
-              },
-            ),
+
             const SizedBox(height: 8),
           ],
         ),
@@ -221,18 +190,20 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     }
 
     setState(() => _isAnalyzing = true);
-    
+
     try {
       final detected = await _aiService.detectIngredientsFromImage(_image!);
       setState(() {
         _ingredients.addAll(detected.where((e) => !_ingredients.contains(e)));
       });
       if (mounted) {
-        SnackbarHelper.showSuccess(context, 'AI detected ${detected.length} ingredients!');
+        SnackbarHelper.showSuccess(
+            context, 'AI detected ${detected.length} ingredients!');
       }
     } catch (e) {
       if (mounted) {
-        SnackbarHelper.showError(context, 'AI Analysis failed: $e');
+        final message = e.toString().replaceFirst('Exception: ', '');
+        SnackbarHelper.showError(context, message);
       }
     } finally {
       setState(() => _isAnalyzing = false);
@@ -247,16 +218,24 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         permission = await Geolocator.requestPermission();
       }
 
-      if (permission == LocationPermission.always || permission == LocationPermission.whileInUse) {
+      if (permission == LocationPermission.always ||
+          permission == LocationPermission.whileInUse) {
         Position position = await Geolocator.getCurrentPosition();
-        _latitude = position.latitude;
-        _longitude = position.longitude;
+        setState(() {
+          _latitude = position.latitude;
+          _longitude = position.longitude;
+          _currentLatLng = LatLng(_latitude!, _longitude!);
+        });
 
-        List<Placemark> placemarks = await placemarkFromCoordinates(_latitude!, _longitude!);
+        _mapController.move(_currentLatLng, 15.0);
+
+        List<Placemark> placemarks =
+            await placemarkFromCoordinates(_latitude!, _longitude!);
         if (placemarks.isNotEmpty) {
           Placemark place = placemarks[0];
           setState(() {
-            _locationController.text = '${place.name}, ${place.subLocality}, ${place.locality}';
+            _address = '${place.name}, ${place.subLocality}, ${place.locality}';
+            _locationController.text = _address;
           });
         }
       }
@@ -321,8 +300,103 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         Navigator.pop(context);
       }
     } else if (mounted) {
-      SnackbarHelper.showError(context, foodProvider.errorMessage ?? 'Failed to create post');
+      SnackbarHelper.showError(
+          context, foodProvider.errorMessage ?? 'Failed to create post');
     }
+  }
+
+  Future<void> _updateAddress(LatLng point) async {
+    try {
+      List<Placemark> placemarks =
+          await placemarkFromCoordinates(point.latitude, point.longitude);
+      if (placemarks.isNotEmpty) {
+        Placemark place = placemarks[0];
+        setState(() {
+          _address = '${place.name}, ${place.subLocality}, ${place.locality}';
+          _locationController.text = _address;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error reverse geocoding: $e');
+    }
+  }
+
+  Widget _buildMap() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Pick Location',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        const SizedBox(height: 8),
+        Container(
+          height: 250,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey[300]!),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: FlutterMap(
+              mapController: _mapController,
+              options: MapOptions(
+                initialCenter: _currentLatLng,
+                initialZoom: 15.0,
+                onTap: (tapPosition, point) {
+                  setState(() {
+                    _currentLatLng = point;
+                    _latitude = point.latitude;
+                    _longitude = point.longitude;
+                  });
+                  _updateAddress(point);
+                },
+              ),
+              children: [
+                TileLayer(
+                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  userAgentPackageName: 'com.example.app',
+                ),
+                MarkerLayer(
+                  markers: [
+                    Marker(
+                      point: _currentLatLng,
+                      width: 80,
+                      height: 80,
+                      child: const Icon(Icons.location_on,
+                          color: Colors.red, size: 40),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                _address.isEmpty
+                    ? 'Tap map or use button to select location'
+                    : _address,
+                style: TextStyle(
+                    color: _address.isEmpty ? Colors.grey : Colors.black87,
+                    fontSize: 13),
+              ),
+            ),
+            TextButton.icon(
+              onPressed: _getCurrentLocation,
+              icon: _isLocating
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.my_location, size: 18),
+              label: const Text('My Location'),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 
   @override
@@ -346,20 +420,27 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   decoration: BoxDecoration(
                     color: Colors.grey[100],
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey[300]!, style: BorderStyle.solid),
+                    border: Border.all(
+                        color: Colors.grey[300]!, style: BorderStyle.solid),
                     image: _image != null
-                        ? (kIsWeb 
-                            ? DecorationImage(image: NetworkImage(_image.path), fit: BoxFit.cover)
-                            : DecorationImage(image: FileImage(_image as File), fit: BoxFit.cover))
+                        ? (kIsWeb
+                            ? DecorationImage(
+                                image: NetworkImage(_image.path),
+                                fit: BoxFit.cover)
+                            : DecorationImage(
+                                image: FileImage(_image as File),
+                                fit: BoxFit.cover))
                         : null,
                   ),
                   child: _image == null
                       ? const Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.add_a_photo_outlined, size: 40, color: Colors.grey),
+                            Icon(Icons.add_a_photo_outlined,
+                                size: 40, color: Colors.grey),
                             SizedBox(height: 8),
-                            Text('Click to add photo', style: TextStyle(color: Colors.grey)),
+                            Text('Click to add photo',
+                                style: TextStyle(color: Colors.grey)),
                           ],
                         )
                       : null,
@@ -368,7 +449,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               const SizedBox(height: 12),
               Row(
                 children: [
-                   Expanded(
+                  Expanded(
                     child: OutlinedButton.icon(
                       onPressed: _showImageSourceOptions,
                       icon: const Icon(Icons.camera_alt),
@@ -385,9 +466,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 20),
-              
+
               // AI Analysis Button
               _isAnalyzing
                   ? const LoadingIndicator()
@@ -396,9 +477,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                       onPressed: _analyzeIngredients,
                       color: AppColors.secondary,
                     ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Form Fields
               CustomTextField(
                 controller: _nameController,
@@ -414,7 +495,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 validator: (v) => Validators.validateRequired(v, 'Quantity'),
               ),
               const SizedBox(height: 16),
-              
+
               // Date Picker
               InkWell(
                 onTap: () {
@@ -437,51 +518,48 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.calendar_today, size: 20, color: Colors.grey),
+                      const Icon(Icons.calendar_today,
+                          size: 20, color: Colors.grey),
                       const SizedBox(width: 12),
                       Text(
                         _expirationDate == null
                             ? 'Select Expiration Date'
-                            : DateFormat('MMM dd, yyyy - hh:mm a').format(_expirationDate!),
+                            : DateFormat('MMM dd, yyyy - hh:mm a')
+                                .format(_expirationDate!),
                         style: TextStyle(
-                          color: _expirationDate == null ? Colors.grey[600] : Colors.black,
+                          color: _expirationDate == null
+                              ? Colors.grey[600]
+                              : Colors.black,
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
-              // Location
-              CustomTextField(
-                controller: _locationController,
-                label: 'Location',
-                hint: 'Enter address manually',
-                suffixIcon: IconButton(
-                  icon: _isLocating ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.my_location),
-                  onPressed: _getCurrentLocation,
-                ),
-                validator: (v) => Validators.validateRequired(v, 'Location'),
-              ),
-              
+
+              _buildMap(),
+
               const SizedBox(height: 24),
-              
+
               // Ingredients Chips
-              const Text('Ingredients', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const Text('Ingredients',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
-                children: _ingredients.map((ing) => Chip(
-                  label: Text(ing),
-                  onDeleted: () => _removeIngredient(ing),
-                  deleteIcon: const Icon(Icons.close, size: 16),
-                )).toList(),
+                children: _ingredients
+                    .map((ing) => Chip(
+                          label: Text(ing),
+                          onDeleted: () => _removeIngredient(ing),
+                          deleteIcon: const Icon(Icons.close, size: 16),
+                        ))
+                    .toList(),
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Add manual ingredient
               Row(
                 children: [
@@ -494,14 +572,15 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   ),
                   const SizedBox(width: 8),
                   IconButton(
-                    icon: const Icon(Icons.add_circle, color: AppColors.primary, size: 32),
+                    icon: const Icon(Icons.add_circle,
+                        color: AppColors.primary, size: 32),
                     onPressed: _addIngredient,
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 40),
-              
+
               // Submit
               foodProvider.isLoading
                   ? const LoadingIndicator()

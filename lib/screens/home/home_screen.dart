@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/food_post_provider.dart';
 import '../../providers/request_provider.dart';
+import '../../providers/notification_provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
 import 'donor_home_screen.dart';
@@ -28,9 +29,21 @@ class _HomeScreenState extends State<HomeScreen> {
     const RoleSpecificHome(),
     const BrowseOrMyPosts(),
     const RequestsScreenSwitcher(),
-    const ChatListScreen(), 
+    const ChatListScreen(),
     const ProfileScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      if (authProvider.currentUser != null) {
+        Provider.of<NotificationProvider>(context, listen: false)
+            .initializeRealtime(authProvider.currentUser!.id);
+      }
+    });
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -41,9 +54,53 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
+    final notificationProvider = Provider.of<NotificationProvider>(context);
     final isDonor = authProvider.currentUser?.isDonor ?? true;
 
     return Scaffold(
+      appBar: AppBar(
+        title: Text(
+            AppLocalizations.of(context)?.translate('app_name') ?? 'Wajbat'),
+        actions: [
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.notifications_outlined),
+                onPressed: () {
+                  notificationProvider.clearUnread();
+                  // Optionally navigate to a notifications screen
+                },
+              ),
+              if (notificationProvider.unreadCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      '${notificationProvider.unreadCount}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
       body: IndexedStack(
         index: _selectedIndex,
         children: _screens,
@@ -61,14 +118,20 @@ class _HomeScreenState extends State<HomeScreen> {
             label: AppLocalizations.of(context)?.translate('home') ?? 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(isDonor ? Icons.list_alt_outlined : Icons.search_outlined),
+            icon:
+                Icon(isDonor ? Icons.list_alt_outlined : Icons.search_outlined),
             activeIcon: Icon(isDonor ? Icons.list_alt : Icons.search),
-            label: isDonor ? (AppLocalizations.of(context)?.translate('my_posts') ?? 'My Posts') : (AppLocalizations.of(context)?.translate('browse') ?? 'Browse'),
+            label: isDonor
+                ? (AppLocalizations.of(context)?.translate('my_posts') ??
+                    'My Posts')
+                : (AppLocalizations.of(context)?.translate('browse') ??
+                    'Browse'),
           ),
           BottomNavigationBarItem(
             icon: const Icon(Icons.inbox_outlined),
             activeIcon: const Icon(Icons.inbox),
-            label: AppLocalizations.of(context)?.translate('requests') ?? 'Requests',
+            label: AppLocalizations.of(context)?.translate('requests') ??
+                'Requests',
           ),
           BottomNavigationBarItem(
             icon: const Icon(Icons.chat_bubble_outline),
@@ -78,13 +141,15 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
             icon: const Icon(Icons.person_outline),
             activeIcon: const Icon(Icons.person),
-            label: AppLocalizations.of(context)?.translate('profile') ?? 'Profile',
+            label:
+                AppLocalizations.of(context)?.translate('profile') ?? 'Profile',
           ),
         ],
       ),
       floatingActionButton: isDonor && _selectedIndex == 0
           ? FloatingActionButton(
-              onPressed: () => Navigator.pushNamed(context, AppRoutes.createPost),
+              onPressed: () =>
+                  Navigator.pushNamed(context, AppRoutes.createPost),
               backgroundColor: AppColors.primary,
               child: const Icon(Icons.add, color: Colors.white),
             )
@@ -113,10 +178,10 @@ class BrowseOrMyPosts extends StatelessWidget {
     final authProvider = Provider.of<AuthProvider>(context);
     return authProvider.currentUser?.isDonor ?? true
         ? const FoodListScreen(isMyPosts: true)
-        : const RecipientHomeScreen(); // For recipient, browse is home or similar. 
-        // Technically RecipientHomeScreen is duplicate here if Home is also RecipientHomeScreen.
-        // Assuming FoodListScreen can be used for "Browse" too if configured.
-        // But for now, keeping as logic dictated.
+        : const RecipientHomeScreen(); // For recipient, browse is home or similar.
+    // Technically RecipientHomeScreen is duplicate here if Home is also RecipientHomeScreen.
+    // Assuming FoodListScreen can be used for "Browse" too if configured.
+    // But for now, keeping as logic dictated.
   }
 }
 
@@ -131,6 +196,3 @@ class RequestsScreenSwitcher extends StatelessWidget {
         : const MyRequestsScreen();
   }
 }
-
-
-

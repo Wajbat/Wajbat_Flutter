@@ -148,12 +148,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
 
       if (success && mounted) {
-        // Navigate based on primary role preference or just the first one
-        if (_isDonor) {
-          Navigator.of(context).pushReplacementNamed(AppRoutes.donorHome);
-        } else {
-          Navigator.of(context).pushReplacementNamed(AppRoutes.recipientHome);
-        }
+        Navigator.of(context).pushReplacementNamed(
+          AppRoutes.emailConfirmation,
+          arguments: _emailController.text.trim(),
+        );
       } else if (mounted) {
         SnackbarHelper.showError(
           context, 
@@ -177,6 +175,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           padding: const EdgeInsets.all(24.0),
           child: Form(
             key: _formKey,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [

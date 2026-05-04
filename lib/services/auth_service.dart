@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/config/supabase_config.dart';
@@ -26,7 +27,14 @@ class AuthService {
       final AuthResponse res = await _client.auth.signUp(
         email: email,
         password: password,
-        data: {'name': name},
+        data: {
+          'name': name,
+          'roles': roles,
+          'phone_number': phoneNumber,
+          'organization_name': organizationName,
+          'recipient_type': recipientType,
+          'allergies': allergies ?? [],
+        },
       );
 
       final User? user = res.user;
@@ -34,19 +42,34 @@ class AuthService {
         throw Exception('Sign up failed: User creation returned null');
       }
 
-      // New User - Create Record
-      return await _createPublicUserRecord(
-        user.id, 
-        email, 
-        name, 
-        roles, 
-        phoneNumber, 
-        organizationName, 
-        recipientType,
-        allergies,
+      // If session is null, it means email confirmation is required.
+      // The user record will be created by the DB trigger we added.
+      // We return a temporary UserModel or handle the "Check Email" state in the UI.
+      return UserModel(
+        id: user.id,
+        name: name,
+        email: email,
+        phoneNumber: phoneNumber,
+        roles: roles,
+        active_role: roles.first,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        organizationName: organizationName,
+        recipientType: recipientType,
+        allergies: allergies ?? [],
       );
 
     } on AuthException catch (e) {
+      String displayMessage = e.message;
+      try {
+        final Map<String, dynamic> errorData = jsonDecode(e.message);
+        if (errorData.containsKey('message')) {
+          displayMessage = errorData['message'];
+        }
+      } catch (_) {
+        // Not a JSON string
+      }
+
       if (e.message.contains('User already registered') || e.code == 'user_already_exists') {
         // User exists. Try to sign in to verify ownership.
         try {
@@ -63,38 +86,27 @@ class AuthService {
                    final Set<String> currentRoles = Set.from(existingUser.roles);
                    final Set<String> newRoles = Set.from(roles);
                    
-                   // If new roles are already present, just log them in
                    if (currentRoles.containsAll(newRoles)) {
-                      // Just return existing
                       return existingUser;
                    }
 
-                   // Add new roles
                    currentRoles.addAll(newRoles);
-                   
-                   // Update DB
-                   final String newActiveRole = roles.first; // Switch to the role they just signed up for
+                   final String newActiveRole = roles.first; 
                    
                    await _client.from('users').update({
                      'roles': currentRoles.toList(),
                      'active_role': newActiveRole,
                      'updated_at': DateTime.now().toIso8601String(),
-                     // Note: We are NOT automatically adding allergies here for existing users to avoid overwriting/complexity logic without user input
-                     // If needed, we could merge allergies, but simpler to let them edit profile later.
                    }).eq('id', user.id);
 
-                   // If new role includes donor, ensure rewards exist
                     if (newRoles.contains('donor')) {
                        await _ensureRewardRecord(user.id);
                     }
                    
                    return await _fetchUserProfile(user.id);
                 }
-             } catch (_) {
-                // Profile missing (Zombie). Recover by creating it.
-             }
+             } catch (_) {}
 
-             // Create record if missing
              return await _createPublicUserRecord(
                 user.id, 
                 email, 
@@ -110,11 +122,10 @@ class AuthService {
           throw Exception('Account exists. Please login with correct password to resolve issues.');
         }
       } 
-      throw Exception('Sign up error: ${e.message}');
+      throw Exception(displayMessage);
     } catch (e) {
-      throw Exception('Sign up error: $e');
+      throw Exception('$e');
     }
-    return null;
   }
 
   Future<UserModel> _createPublicUserRecord(
@@ -143,8 +154,7 @@ class AuthService {
         allergies: allergies ?? [],
       );
 
-      // Insert into 'users' table
-      await _client.from('users').upsert(newUser.toJson()); // Upsert to be safe? Or insert.
+      await _client.from('users').upsert(newUser.toJson());
 
       if (roles.contains('donor')) {
         await _ensureRewardRecord(userId);
@@ -173,7 +183,6 @@ class AuthService {
       }
   }
 
-  // Sign In
   Future<UserModel?> signIn({
     required String email,
     required String password,
@@ -191,11 +200,10 @@ class AuthService {
 
       return await _fetchUserProfile(user.id);
     } catch (e) {
-      throw Exception('Sign in error: $e');
+      throw Exception('$e');
     }
   }
 
-  // Sign Out
   Future<void> signOut() async {
     try {
       await _client.auth.signOut();
@@ -204,25 +212,23 @@ class AuthService {
     }
   }
 
-  // Get Current User
   Future<UserModel?> getCurrentUser() async {
     try {
       final User? user = _client.auth.currentUser;
       if (user == null) return null;
       return await _fetchUserProfile(user.id);
     } catch (e) {
-      return null; // Return null if session expired or fetch failed
+      return null;
     }
   }
 
-  // Switch Role
   Future<UserModel?> switchRole({
     required String userId,
     required String newRole,
   }) async {
     try {
       await _client.from('users').update({
-        'active_role': newRole, // Updated column name
+        'active_role': newRole,
         'updated_at': DateTime.now().toIso8601String(),
       }).eq('id', userId);
 
@@ -232,7 +238,6 @@ class AuthService {
     }
   }
 
-  // Reset Password
   Future<void> resetPassword({required String email}) async {
     try {
       await _client.auth.resetPasswordForEmail(
@@ -246,7 +251,6 @@ class AuthService {
     }
   }
 
-  // Helper to fetch user profile
   Future<UserModel?> _fetchUserProfile(String userId) async {
     try {
       final response = await _client.from('users').select().eq('id', userId).single();
@@ -255,15 +259,10 @@ class AuthService {
       throw Exception('Failed to fetch user profile: $e');
     }
   }
-  // Delete Account
+
   Future<void> deleteAccount(String userId) async {
     try {
-      // Delete from public 'users' table. 
-      // Note: This requires RLS policies to allow users to delete their own rows.
-      // If RLS is set up correctly, cascading deletes might handle related data.
       await _client.from('users').delete().eq('id', userId);
-      
-      // Sign out after deletion
       await signOut();
     } catch (e) {
       throw Exception('Delete account error: $e');

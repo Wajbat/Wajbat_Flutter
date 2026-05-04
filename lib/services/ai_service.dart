@@ -23,16 +23,20 @@ class AIService {
       final content = [
         Content.multi([
           TextPart(
-              'Analyze this food image and list all visible ingredients. Return ONLY a comma-separated list of ingredient names, nothing else. Be specific and detailed.'),
+              'Analyze this image. First, determine if it is a clear, identifiable image of food. If it is NOT food, or if it is too blurry or unclear to identify, return "INVALID_IMAGE". If it is a valid food image, list all visible ingredients. Return ONLY "INVALID_IMAGE" or a comma-separated list of ingredient names, nothing else. Be specific and detailed.'),
           DataPart('image/jpeg', imageBytes),
         ])
       ];
 
       final response = await _model.generateContent(content);
-      final String? text = response.text;
+      final String? text = response.text?.trim();
 
       if (text == null || text.isEmpty) {
         throw Exception('AI returned empty response');
+      }
+
+      if (text.contains('INVALID_IMAGE')) {
+        throw Exception('Invalid food image');
       }
 
       final List<String> ingredients = text
@@ -41,12 +45,19 @@ class AIService {
           .where((e) => e.isNotEmpty)
           .toList();
 
+      if (ingredients.isEmpty) {
+        throw Exception('Invalid food image');
+      }
+
       return ingredients;
     } catch (e) {
       if (e.toString().contains('API_KEY')) {
         throw Exception('Invalid or missing API Key');
       }
-      throw Exception('Failed to detect ingredients: $e');
+      if (e.toString().contains('Invalid food image')) {
+        throw Exception('Invalid food image');
+      }
+      throw Exception('Image analysis failed');
     }
   }
 }

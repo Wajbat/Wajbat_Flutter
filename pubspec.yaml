@@ -40,14 +40,20 @@ dependencies:
   geolocator: ^10.1.0
   geocoding: ^2.1.1
   google_maps_flutter: ^2.5.0
+  flutter_map: ^6.1.0
+  latlong2: ^0.9.1
   
   # Utilities
+  app_links: ^6.3.2
   url_launcher: ^6.2.2
   share_plus: ^7.2.1
   path_provider: ^2.1.1
   shared_preferences: ^2.2.2
   uuid: ^4.2.2
   flutter_dotenv: ^5.1.0
+  
+  # Notifications
+  flutter_local_notifications: ^17.0.0
   
   # Date & Time
   flutter_datetime_picker_plus: ^2.1.0
