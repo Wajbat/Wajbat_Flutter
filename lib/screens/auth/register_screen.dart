@@ -114,6 +114,72 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
   }
 
+  void _showSuccessDialog(String userId) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.check_circle_outline,
+                color: Colors.green,
+                size: 80,
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Account Verified',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'This email has been verified against the ID:',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  userId,
+                  style: const TextStyle(
+                    fontFamily: 'monospace',
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: CustomButton(
+                  text: 'OK',
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Pop dialog
+                    Navigator.of(context).pushNamedAndRemoveUntil(
+                      AppRoutes.home,
+                      (route) => false,
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _handleRegister() async {
     if (!_formKey.currentState!.validate()) return;
     
@@ -148,10 +214,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
 
       if (success && mounted) {
-        Navigator.of(context).pushReplacementNamed(
-          AppRoutes.emailConfirmation,
-          arguments: _emailController.text.trim(),
+        // Show Buffer/Loading Dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const AlertDialog(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Confirming email...', style: TextStyle(fontWeight: FontWeight.w500)),
+              ],
+            ),
+          ),
         );
+
+        // Wait for 2 seconds
+        await Future.delayed(const Duration(seconds: 2));
+
+        if (mounted) {
+          Navigator.of(context).pop(); // Remove loading dialog
+          final userId = authProvider.currentUser?.id ?? 'N/A';
+          _showSuccessDialog(userId);
+        }
       } else if (mounted) {
         SnackbarHelper.showError(
           context, 

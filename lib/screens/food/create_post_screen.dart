@@ -11,6 +11,8 @@ import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart'
 import 'package:intl/intl.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
 
 import '../../core/constants/app_colors.dart';
@@ -75,6 +77,36 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     } catch (e) {
       if (mounted) {
         SnackbarHelper.showError(context, 'Error selecting image: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isPickingImage = false);
+      }
+    }
+  }
+
+  Future<void> _pickSampleImage(String assetPath) async {
+    if (_isPickingImage) return;
+    setState(() => _isPickingImage = true);
+
+    try {
+      // Load asset
+      final byteData = await rootBundle.load(assetPath);
+
+      // Create temp file
+      final tempDir = await getTemporaryDirectory();
+      final tempFile =
+          File('${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}.png');
+
+      // Write to file
+      await tempFile.writeAsBytes(byteData.buffer.asUint8List(
+          byteData.offsetInBytes, byteData.lengthInBytes));
+
+      // Proceed to crop
+      await _cropImage(tempFile.path);
+    } catch (e) {
+      if (mounted) {
+        SnackbarHelper.showError(context, 'Failed to load sample image: $e');
       }
     } finally {
       if (mounted) {
@@ -175,8 +207,47 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 _pickImage(ImageSource.gallery);
               },
             ),
-
-            const SizedBox(height: 8),
+            const Divider(),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Text(
+                'Or Choose Sample Photo (For Testing)',
+                style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey),
+              ),
+            ),
+            SizedBox(
+              height: 100,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: 4,
+                itemBuilder: (context, index) {
+                  final assetPath = 'assets/images/food${index + 1}.png';
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context);
+                      _pickSampleImage(assetPath);
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 12),
+                      width: 80,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        image: DecorationImage(
+                          image: AssetImage(assetPath),
+                          fit: BoxFit.cover,
+                        ),
+                        border: Border.all(color: Colors.grey[300]!),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 24),
           ],
         ),
       ),
